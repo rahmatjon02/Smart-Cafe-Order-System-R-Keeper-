@@ -35,16 +35,17 @@ export const orderApi = createApi({
     getSingleOrder: builder.query({
       query: ({ orderId, tableId, waiterId }) =>
         `/Order/get-single-order?OrderId=${orderId}&TableId=${tableId}&WaiterId=${waiterId}`,
-      providesTags: (result, error, arg) => [
-        { type: "OrderItems", id: arg.orderId },
-      ],
+      providesTags: (arg) => [{ type: "OrderItems", id: arg.orderId }],
+    }),
+
+    getOrderId: builder.query({
+      query: ({ tableId }) => `/Order/get-single-order?&TableId=${tableId}`,
+      providesTags: (arg) => [{ type: "OrderItems", id: arg.orderId }],
     }),
 
     getOrderTotal: builder.query({
       query: ({ orderId }) => `/Order/get-order-total?orderId=${orderId}`,
-      providesTags: (result, error, arg) => [
-        { type: "OrderItems", id: arg.orderId },
-      ],
+      providesTags: (arg) => [{ type: "OrderItems", id: arg.orderId }],
     }),
 
     createOrder: builder.mutation({
@@ -61,9 +62,7 @@ export const orderApi = createApi({
         url: `/Order/add-order-item?orderId=${orderId}&menuItemId=${menuItemId}`,
         method: "POST",
       }),
-      invalidatesTags: (result, error, arg) => [
-        { type: "OrderItems", id: arg.orderId },
-      ],
+      invalidatesTags: (arg) => [{ type: "OrderItems", id: arg.orderId }],
     }),
 
     removeOrderItem: builder.mutation({
@@ -71,9 +70,7 @@ export const orderApi = createApi({
         url: `/Order/remove-order-item?orderId=${orderId}&orderItemId=${orderItemId}`,
         method: "DELETE",
       }),
-      invalidatesTags: (result, error, arg) => [
-        { type: "OrderItems", id: arg.orderId },
-      ],
+      invalidatesTags: (arg) => [{ type: "OrderItems", id: arg.orderId }],
     }),
 
     confirmOrder: builder.mutation({
@@ -81,7 +78,7 @@ export const orderApi = createApi({
         url: `/Order/confirm-order?orderId=${orderId}`,
         method: "POST",
       }),
-      invalidatesTags: (result, error, arg) => [
+      invalidatesTags: (arg) => [
         { type: "Orders" },
         { type: "OrderItems", id: arg.orderId },
       ],
@@ -92,15 +89,15 @@ export const orderApi = createApi({
         url: `/Order/pay-for-order?orderId=${orderId}`,
         method: "POST",
       }),
-      invalidatesTags: (result, error, arg) => [
+      invalidatesTags: (arg) => [
         { type: "Orders" },
         { type: "OrderItems", id: arg.orderId },
       ],
     }),
 
     cancelOrder: builder.mutation({
-      query: ({ orderId }) => ({
-        url: `/Order/cancel-order?orderId=${orderId}`,
+      query: (id) => ({
+        url: `/Order/cancel-order?orderId=${id}`,
         method: "POST",
       }),
       invalidatesTags: ["Orders"],
@@ -109,7 +106,7 @@ export const orderApi = createApi({
     // -------------------- Tables --------------------
     getAllTables: builder.query({
       query: ({ pageNumber = 1, pageSize = 10 }) =>
-        `/Table/get-all-tables?pageNumber=${pageNumber}&pageSize=${pageSize}`,
+        `/Table/get-all-tables?OnlyActive=false&OnlyFree=false&pageNumber=${pageNumber}&pageSize=${pageSize}`,
       providesTags: ["Tables"],
     }),
   }),
@@ -129,4 +126,5 @@ export const {
   usePayOrderMutation,
   useCancelOrderMutation,
   useGetAllTablesQuery,
+  useLazyGetOrderIdQuery,
 } = orderApi;

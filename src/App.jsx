@@ -3,7 +3,6 @@ import { Route, Routes } from "react-router-dom";
 import Layout from "./pages/layout";
 import AdminPanel from "./pages/admin/AdminPanel";
 import WaiterHome from "./pages/waiter/WaiterHome";
-import WaiterAdd from "./pages/waiter/WaiterAdd";
 import WaiterEdit from "./pages/waiter/WaiterEdit";
 
 const App = () => {
@@ -16,8 +15,7 @@ const App = () => {
 
         {/* Официант */}
         <Route path="WaiterHome" element={<WaiterHome />} />
-        <Route path="waiter/add" element={<WaiterAdd />} />
-        <Route path="waiter/edit/:id" element={<WaiterEdit />} />
+        <Route path="/WaiterEdit/:tableId/:orderId" element={<WaiterEdit />} />
       </Route>
     </Routes>
   );
