@@ -3,7 +3,7 @@ import Skeleton from "react-loading-skeleton";
 import { toast, Toaster } from "react-hot-toast";
 import { Bell, Search } from "lucide-react";
 import { useEffect, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import {
   useGetAllTablesQuery,
   useCreateOrderMutation,
@@ -98,7 +98,18 @@ export default function WaiterHome() {
       <Toaster />
       {/* Header */}
       <div className="flex justify-between items-center mb-3">
-        <h1 className="text-lg font-bold text-white/90">Главная официанта</h1>
+        <div className="flex items-center gap-4">
+          <h1 className="text-2xl font-bold text-white/90">Главная официанта</h1>
+          <Link to={"/"} className="bg-[#1f1f1f] px-3 py-2 rounded-lg text-sm">
+            Админ
+          </Link>
+          <Link
+            to={"/WaiterHome"}
+            className="bg-[#1f1f1f] px-3 py-2 rounded-lg text-sm"
+          >
+            Официант
+          </Link>
+        </div>
         <div className="flex gap-2">
           <button className="px-3 py-2 bg-white/20 rounded-lg">
             <Search size={20} />

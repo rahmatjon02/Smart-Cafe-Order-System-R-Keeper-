@@ -2,6 +2,7 @@ import React from "react";
 import { AdminDashboard } from "./AdminDashboard";
 import { OrdersAdmin } from "./OrdersAdmin";
 import { ReportsAdmin } from "./ReportsAdmin";
+import { Link } from "react-router-dom";
 
 export default function AdminPanel() {
   const [tab, setTab] = React.useState("dashboard");
@@ -12,9 +13,12 @@ export default function AdminPanel() {
         <div className="flex items-center justify-between mb-6">
           <div className="flex items-center gap-4">
             <div className="text-2xl font-bold">Smart Cafe</div>
-            <div className="bg-[#1f1f1f] px-3 py-2 rounded-lg text-sm">
+            <Link to={'/'} className="bg-[#1f1f1f] px-3 py-2 rounded-lg text-sm">
               Админ
-            </div>
+            </Link>
+            <Link to={'/WaiterHome'} className="bg-[#1f1f1f] px-3 py-2 rounded-lg text-sm">
+              Официант
+            </Link>
           </div>
           <div className="flex items-center gap-3">
             <button
