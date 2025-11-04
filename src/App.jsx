@@ -4,6 +4,7 @@ import Layout from "./pages/layout";
 import AdminPanel from "./pages/admin/AdminPanel";
 import WaiterHome from "./pages/waiter/WaiterHome";
 import WaiterEdit from "./pages/waiter/WaiterEdit";
+import Kitchen from "./pages/kitchen/Kitchen";
 
 const App = () => {
   return (
@@ -16,6 +17,9 @@ const App = () => {
         {/* Официант */}
         <Route path="WaiterHome" element={<WaiterHome />} />
         <Route path="/WaiterEdit/:tableId/:orderId" element={<WaiterEdit />} />
+
+        {/* Кухня */}
+        <Route path="/Kitchen" element={<Kitchen />} />
       </Route>
     </Routes>
   );

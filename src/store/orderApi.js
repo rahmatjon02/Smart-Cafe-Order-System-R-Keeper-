@@ -65,6 +65,14 @@ export const orderApi = createApi({
       invalidatesTags: (arg) => [{ type: "OrderItems", id: arg.orderId }],
     }),
 
+    serveOrderItem: builder.mutation({
+      query: ({ orderItemId }) => ({
+        url: `/Order/serve-order-item?orderItemId=${orderItemId}`,
+        method: "PUT",
+      }),
+      invalidatesTags: (arg) => [{ type: "OrderItems", id: arg.orderItemId }],
+    }),
+
     removeOrderItem: builder.mutation({
       query: ({ orderId, orderItemId }) => ({
         url: `/Order/remove-order-item?orderId=${orderId}&orderItemId=${orderItemId}`,
@@ -76,7 +84,7 @@ export const orderApi = createApi({
     confirmOrder: builder.mutation({
       query: ({ orderId }) => ({
         url: `/Order/confirm-order?orderId=${orderId}`,
-        method: "POST",
+        method: "PUT",
       }),
       invalidatesTags: (arg) => [
         { type: "Orders" },
@@ -87,7 +95,7 @@ export const orderApi = createApi({
     payOrder: builder.mutation({
       query: ({ orderId }) => ({
         url: `/Order/pay-for-order?orderId=${orderId}`,
-        method: "POST",
+        method: "PUT",
       }),
       invalidatesTags: (arg) => [
         { type: "Orders" },
@@ -98,7 +106,7 @@ export const orderApi = createApi({
     cancelOrder: builder.mutation({
       query: (id) => ({
         url: `/Order/cancel-order?orderId=${id}`,
-        method: "POST",
+        method: "PUT",
       }),
       invalidatesTags: ["Orders"],
     }),
@@ -109,6 +117,20 @@ export const orderApi = createApi({
         `/Table/get-all-tables?OnlyActive=false&OnlyFree=false&pageNumber=${pageNumber}&pageSize=${pageSize}`,
       providesTags: ["Tables"],
     }),
+
+    // -------------------- Kitchen --------------------
+    getKitchenQueue: builder.query({
+      query: () => `/Kitchen/get-queue`,
+      providesTags: ["Kitchen"],
+    }),
+
+    markAsReady: builder.mutation({
+      query: ({ orderItemId }) => ({
+        url: `/Kitchen/mark-as-ready?orderItemId=${orderItemId}`,
+        method: "POST",
+      }),
+      invalidatesTags: ["Kitchen"],
+    }),
   }),
 });
 
@@ -118,7 +140,7 @@ export const {
   useGetMenuItemsByCategoryQuery,
   useGetAllOrdersQuery,
   useGetSingleOrderQuery,
-  useGetOrderTotalQuery,
+  useLazyGetOrderTotalQuery,
   useCreateOrderMutation,
   useAddOrderItemMutation,
   useRemoveOrderItemMutation,
@@ -127,4 +149,7 @@ export const {
   useCancelOrderMutation,
   useGetAllTablesQuery,
   useLazyGetOrderIdQuery,
+  useServeOrderItemMutation,
+  useGetKitchenQueueQuery,
+  useMarkAsReadyMutation,
 } = orderApi;

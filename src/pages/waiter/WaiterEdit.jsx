@@ -1,13 +1,30 @@
 import {
   ChevronLeft,
   ChevronRight,
-  ChevronDown,
-  ChevronUp,
-  Plus,
+  Trash,
   Bell,
   Search,
-  Trash,
+  Check,
 } from "lucide-react";
+import {
+  AppBar,
+  Toolbar,
+  IconButton,
+  Drawer,
+  BottomNavigation,
+  BottomNavigationAction,
+  Typography,
+  Box,
+  Button,
+} from "@mui/material";
+import {
+  ArrowBack,
+  Category,
+  RestaurantMenu,
+  Payment,
+  Save,
+  Close,
+} from "@mui/icons-material";
 import { useState, useEffect } from "react";
 import { toast, Toaster } from "react-hot-toast";
 import {
@@ -26,15 +43,34 @@ import {
   useCancelOrderMutation,
   useConfirmOrderMutation,
   usePayOrderMutation,
+  useServeOrderItemMutation,
 } from "../../store/orderApi";
 
 function WaiterEdit() {
-  // 🔹 теперь из URL получаем оба параметра
   const { tableId, orderId } = useParams();
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
 
   const waiterId = 1;
+
+  // Форматирование времени заказа / позиции
+  const formatTime = (t) => {
+    if (!t) return "";
+    try {
+      const d = new Date(t);
+      return d.toLocaleString("ru-RU", {
+        day: "2-digit",
+        month: "2-digit",
+        year: "numeric",
+        hour: "2-digit",
+        minute: "2-digit",
+      });
+    } catch (e) {
+      return String(t);
+    }
+  };
+
+  // orderCreatedAt будет вычисляться после загрузки orderData
 
   // --- Получаем заказ ---
   const { data: orderData, isLoading } = useGetSingleOrderQuery({
@@ -42,6 +78,10 @@ function WaiterEdit() {
     tableId: Number(tableId),
     waiterId,
   });
+
+  const orderCreatedAt = orderData?.data?.createdAt || "-";
+
+  const orderCompletedAt = orderData?.data?.completedAt || "-";
 
   const [orderItems, setOrderItems] = useState([]);
 
@@ -51,22 +91,18 @@ function WaiterEdit() {
     }
   }, [orderData]);
 
-  // --- Меню ---
+  // --- Меню и категории ---
   const { data: menuData } = useGetMenuItemsQuery({
     pageNumber: 1,
     pageSize: 100,
   });
 
-  // --- Категории ---
   const { data: categoriesData } = useGetCategoriesQuery({
     pageNumber: 1,
-    pageSize: 20,
+    pageSize: 200,
   });
 
-  const [selectedCategory, setSelectedCategory] = useState({
-    id: "1",
-    name: "Все",
-  });
+  const [selectedCategory, setSelectedCategory] = useState("1");
 
   const { data: menuItemsData } = useGetMenuItemsByCategoryQuery(
     { categoryId: selectedCategory?.id || "1", pageNumber: 1, pageSize: 50 },
@@ -84,6 +120,7 @@ function WaiterEdit() {
   const [cancelOrder] = useCancelOrderMutation();
   const [confirmOrder] = useConfirmOrderMutation();
   const [payOrder] = usePayOrderMutation();
+  const [serveOrderItem] = useServeOrderItemMutation();
 
   // --- Добавление блюда ---
   const handleMenuItemClick = async (item) => {
@@ -111,15 +148,16 @@ function WaiterEdit() {
     });
   };
 
-  // --- Удаление блюда ---
   const handleRemoveItem = async (item) => {
     await removeOrderItem({ orderId: Number(orderId), orderItemId: item.id });
     setOrderItems((prev) => prev.filter((i) => i.id !== item.id));
   };
 
-  // --- Отмена заказа ---
+  const handleServedItem = async (item) => {
+    await serveOrderItem({ orderItemId: item.id });
+  };
+
   const handleCancelOrder = async () => {
-    // Проверяем, есть ли блюда со статусом Started или выше
     const hasStartedItems = orderItems.some(
       (item) =>
         item.status === "Started" ||
@@ -128,9 +166,7 @@ function WaiterEdit() {
     );
 
     if (hasStartedItems) {
-      toast.error(
-        "Нельзя отменять заказ, некоторые блюда уже начали готовить!"
-      );
+      toast.error("Нельзя отменять заказ — блюда уже готовятся!");
       return;
     }
 
@@ -138,22 +174,35 @@ function WaiterEdit() {
       await cancelOrder(Number(orderId)).unwrap();
       toast.success("Заказ отменён");
       navigate("/WaiterHome");
-    } catch (err) {
+    } catch {
       toast.error("Ошибка при отмене заказа");
-      console.error(err);
     }
   };
 
-  //--Создание заказа--
   const handleConfirmOrder = async () => {
     await confirmOrder({ orderId: Number(orderId) });
     navigate("/WaiterHome");
   };
 
-  //--Оплата заказа--
   const handlePayOrder = async () => {
     await payOrder({ orderId: Number(orderId) });
     navigate("/WaiterHome");
+  };
+
+  // --- MUI Drawer для мобильной версии ---
+  const [drawerOpen, setDrawerOpen] = useState(false);
+  const [drawerLevel, setDrawerLevel] = useState("categories"); // categories | items
+
+  const toggleDrawer = (open) => () => setDrawerOpen(open);
+
+  const handleSelectCategory = (category) => {
+    setSelectedCategory(category);
+    setDrawerLevel("items");
+  };
+
+  const handleBackInDrawer = () => {
+    if (drawerLevel === "items") setDrawerLevel("categories");
+    else setDrawerOpen(false);
   };
 
   if (isLoading) return <div className="p-4 text-white">Загрузка...</div>;
@@ -161,8 +210,9 @@ function WaiterEdit() {
   return (
     <div className="bg-black text-white h-screen flex flex-col overflow-hidden">
       <Toaster />
-      {/* Header */}
-      <div className="p-2 pb-3 shrink-0 bg-black">
+
+      {/* --- Desktop header --- */}
+      <div className="hidden lg:block p-2 pb-3 shrink-0 bg-black">
         <div className="flex gap-3 items-center justify-between">
           <div className="flex gap-3 items-center justify-between w-[61.5%]">
             <Link
@@ -174,10 +224,12 @@ function WaiterEdit() {
             <div className="text-sm h-12 w-4/5 px-4 py-2 bg-white/20 text-white rounded-lg flex items-center justify-between">
               <div className="flex items-center justify-between w-full">
                 <div className="font-medium text-white">
-                  Редактировать заказ №{orderData?.data?.id || orderId}
+                  Заказ №{orderData?.data?.id || orderId}
                 </div>
                 <span>Стол: {orderData?.data?.tableId || tableId}</span>
-                <div className="text-right mt-1 text-white/60">12:40</div>
+                <div className="text-right mt-1 text-white/60">
+                  {formatTime(orderCreatedAt) || "—"}
+                </div>
               </div>
             </div>
           </div>
@@ -200,7 +252,8 @@ function WaiterEdit() {
         </div>
       </div>
 
-      <div className="flex-1 p-2 flex gap-3 overflow-hidden">
+      {/* --- Desktop layout --- */}
+      <div className="hidden lg:flex flex-1 p-2 gap-3 overflow-hidden">
         {/* Left Panel */}
         <div className="flex-1 flex flex-col gap-1 overflow-hidden">
           <div className="flex gap-1">
@@ -231,7 +284,7 @@ function WaiterEdit() {
                       : item.status === "Ready"
                       ? "bg-green-500 text-black"
                       : item.status === "Served"
-                      ? "bg-gray-300 text-black"
+                      ? "bg-gray-600 text-black"
                       : item.status === "Cancelled"
                       ? "bg-red-500 text-white"
                       : "bg-white/20 text-white"
@@ -239,70 +292,85 @@ function WaiterEdit() {
                 >
                   <div className="flex-1 text-sm">
                     <div className="font-medium truncate">
-                      {menuItem?.name || "Блюдо"}
+                     #{item.id} {menuItem?.name || "Блюдо"} 
+                    </div>
+                    <div className="text-xs text-white/60">
+                      {formatTime(item.startedAt || "-")}
+                      {" - "}
+                      {formatTime(item.completedAt || "-")}
                     </div>
                   </div>
-                  {item.quantity > 1 && (
-                    <div className="mx-2 text-xs font-medium">
-                      {item.quantity} шт
-                    </div>
-                  )}
+                  <div className="mx-2 text-xs font-medium">
+                    {item.quantity} шт
+                  </div>
                   <div className="text-right text-sm font-medium">
                     {item.priceAtOrderTime} ₽
                   </div>
 
-                  <div className="ml-2 text-xs font-semibold">
-                    {item.status}
-                  </div>
-
                   <button
+                    title="Удалить блюдо из заказа"
                     className={`${
-                      item.status === "Started" ? "hidden" : ""
+                      item.status === "New" ? "block" : "hidden"
                     } ml-1 text-red-500 cursor-pointer rounded-lg p-3 hover:bg-white/10`}
                     onClick={() => handleRemoveItem(item)}
                   >
                     <Trash size={15} />
                   </button>
+
+                  <button
+                    className={`${
+                      item.status === "Ready" ? "block" : "hidden"
+                    } ml-1 text-black bg-green-300 cursor-pointer rounded-lg p-3 hover:bg-white/50`}
+                    onClick={() => handleServedItem(item)}
+                  >
+                    <Check size={15} />
+                  </button>
+
+                  <div className="ml-2 text-xs font-semibold">
+                    {item.status == "New"
+                      ? "Создан"
+                      : item.status == "Started"
+                      ? "В процессе"
+                      : item.status == "Ready"
+                      ? "Готов"
+                      : item.status == "Served"
+                      ? "Подан"
+                      : item.status == "Cancelled"
+                      ? "Отменен"
+                      : ""}
+                  </div>
                 </div>
               );
             })}
           </div>
 
-          <div className="pt-1">
-            {/* <div className="flex gap-1 mb-2">
-              <button className="flex-1 h-10 bg-white/10 rounded-lg flex items-center justify-center">
-                <ChevronDown size={24} />
-              </button>
-              <button className="flex-1 h-10 bg-white/10 rounded-lg flex items-center justify-center">
-                <ChevronUp size={24} />
-              </button>
-              <button className="flex-1 h-10 bg-white/20 rounded-lg flex items-center justify-center gap-2">
-                <Plus size={24} />
-                <span className="text-sm">Гость</span>
-              </button>
-            </div> */}
-            <div className="flex gap-2">
-              <button
-                onClick={handlePayOrder}
-                className="flex-1 py-3 bg-green-600 hover:bg-green-700 rounded-lg font-bold text-base flex justify-between items-center px-4"
-              >
-                <span>Оплата</span>
-                <span>{totalPrice} ₽</span>
-              </button>
-            </div>
+          <div className="pt-1 flex gap-2">
+            <button
+              onClick={handlePayOrder}
+              className="flex-1 py-3 bg-green-600 hover:bg-green-700 rounded-lg font-bold text-base flex justify-between items-center px-4"
+            >
+              <span>Оплата</span>
+              <span>{totalPrice} ₽</span>
+            </button>
+            <button
+              onClick={handleConfirmOrder}
+              className="flex-1 py-3 bg-white/10 hover:bg-gray-600 rounded-lg font-bold text-base"
+            >
+              Сохранить заказ
+            </button>
           </div>
         </div>
 
-        {/* Middle Panel */}
+        {/* Middle & Right Panels */}
         <div className="w-64 flex flex-col gap-1 overflow-hidden">
-          <div className="p-2 bg-white/20 rounded-t-xl">
-            <h2 className=" font-bold text-center">Меню</h2>
+          <div className="p-2 bg-white/20 rounded-t-xl text-center font-bold">
+            Меню
           </div>
-          <div className="flex-1 grid grid-cols-2 gap-1 overflow-y-auto scrollbar-hide  justify-items-stretch content-start">
+          <div className="flex-1 grid grid-cols-2 gap-1 overflow-y-auto scrollbar-hide content-start">
             {categoriesData?.data.map((category) => (
               <button
                 key={category.id}
-                className="bg-white/20 h-24 font-medium text-xs flex items-center justify-center hover:opacity-90 transition-opacity "
+                className="bg-white/20 h-24 font-medium text-xs flex items-center justify-center hover:opacity-90 transition-opacity"
                 onClick={() => setSelectedCategory(category)}
               >
                 {category.name}
@@ -311,15 +379,13 @@ function WaiterEdit() {
           </div>
         </div>
 
-        {/* Right Panel */}
         <div className="flex-1 flex flex-col gap-1 overflow-hidden">
-          <div className="p-2 bg-white/10 rounded-t-xl">
-            <h2 className="font-bold text-center">
+          <div className="p-2 bg-white/20 rounded-t-xl">
+            <h2 className=" font-bold text-center">
               {selectedCategory?.name || "Блюда"}
             </h2>
           </div>
-
-          <div className="flex-1 grid grid-cols-3 gap-1 overflow-y-auto scrollbar-hide justify-items-stretch content-start">
+          <div className="flex-1 grid grid-cols-3 gap-1 overflow-y-auto scrollbar-hide content-start">
             {menuItemsData?.data?.map((item) => (
               <button
                 key={item.id}
@@ -327,21 +393,234 @@ function WaiterEdit() {
                 onClick={() => handleMenuItemClick(item)}
               >
                 <p className="font-bold">{item.name}</p>
-                <p className="">{item.description}</p>
-                <p className="">{item.price} ₽</p>
+                <p>{item.description}</p>
+                <p>{item.price} ₽</p>
               </button>
             ))}
           </div>
-
-          <div className="pt-1">
-            <button
-              onClick={handleConfirmOrder}
-              className="w-full h-10 bg-white/10 text-green-500 hover:bg-gray-600 rounded-lg text-base font-medium"
-            >
-              Сохранить заказ
-            </button>
-          </div>
         </div>
+      </div>
+
+      {/* --- Mobile layout --- */}
+      <div className="lg:hidden flex flex-col min-h-[92vh] overflow-hidden">
+        <AppBar position="static" sx={{ background: "rgba(255,255,255,0.1)" }}>
+          <Toolbar sx={{ display: "flex", justifyContent: "space-between" }}>
+            <IconButton color="inherit" onClick={() => navigate("/WaiterHome")}>
+              <ArrowBack />
+            </IconButton>
+            <Typography variant="body1">
+              Заказ #{orderData?.data?.id || orderId} | Стол -{" "}
+              {orderData?.data?.tableId || tableId}
+            </Typography>
+            <Box>
+              <IconButton color="inherit">
+                <Search />
+              </IconButton>
+              <IconButton color="inherit">
+                <Bell />
+              </IconButton>
+            </Box>
+          </Toolbar>
+        </AppBar>
+
+        <div className="flex flex-col justify-between h-full">
+          {/* Список заказанных блюд */}
+          <div className=" p-2 flex flex-col gap-2">
+            {/* Красивое время заказа */}
+            <div className="p-3 bg-white/6 rounded-lg text-center flex items-center justify-center gap-5">
+              <div className="text-base text-white/60">Время заказа</div>
+              <div className="font-bold text-lg">
+                {formatTime(orderCreatedAt) || "—"}
+              </div>
+            </div>
+
+            <div className="overflow-y-scroll max-h-[20vh] space-y-2">
+              {orderItems.map((item) => {
+                const menuItem = menuData?.data.find(
+                  (m) => m.id === item.menuItemId
+                );
+                return (
+                  <div
+                    key={item.id}
+                    className={`px-3 h-12 py-2 flex gap-1 justify-between items-center ${
+                      item.status === "New"
+                        ? "bg-white/20 text-white"
+                        : item.status === "Started"
+                        ? "bg-yellow-500 text-black"
+                        : item.status === "Ready"
+                        ? "bg-green-500 text-black"
+                        : item.status === "Served"
+                        ? "bg-gray-600 text-black"
+                        : item.status === "Cancelled"
+                        ? "bg-red-500 text-white"
+                        : "bg-white/20 text-white"
+                    }`}
+                  >
+                    <div className="flex-1 text-sm">
+                      <div className="font-medium truncate">
+                        {menuItem?.name || "Блюдо"}
+                      </div>
+                      <div className="text-xs text-white/60">
+                        {formatTime(item.startedAt || "-")}
+                      </div>
+                    </div>
+                    <div className="mx-2 text-xs font-medium">
+                      {item.quantity} шт
+                    </div>
+                    <div className="text-right text-sm font-medium">
+                      {item.priceAtOrderTime} ₽
+                    </div>
+
+                    <button
+                      title="Удалить блюдо из заказа"
+                      className={`${
+                        item.status === "New" ? "block" : "hidden"
+                      } ml-1 text-red-500 cursor-pointer rounded-lg p-3 hover:bg-white/10`}
+                      onClick={() => handleRemoveItem(item)}
+                    >
+                      <Trash size={15} />
+                    </button>
+
+                    <button
+                      className={`${
+                        item.status === "Ready" ? "block" : "hidden"
+                      } ml-1 text-black bg-green-300 cursor-pointer rounded-lg p-3 hover:bg-white/50`}
+                      onClick={() => handleServedItem(item)}
+                    >
+                      <Check size={15} />
+                    </button>
+
+                    <div className="ml-2 text-xs font-semibold">
+                      {item.status == "New"
+                        ? "Создан"
+                        : item.status == "Started"
+                        ? "В процессе"
+                        : item.status == "Ready"
+                        ? "Готов"
+                        : item.status == "Served"
+                        ? "Подан"
+                        : item.status == "Cancelled"
+                        ? "Отменен"
+                        : ""}
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+
+          {/* --- Bottom menu --- */}
+          <BottomNavigation
+            showLabels
+            sx={{
+              background: "rgba(255,255,255,0.1)",
+              borderTop: "1px solid rgba(255,255,255,0.2)",
+              color: "white",
+              "& .MuiBottomNavigationAction-root": {
+                color: "white",
+                "&.Mui-selected": {
+                  color: "#00bfff", // Акцент при выборе (опционально)
+                },
+              },
+              "& .MuiSvgIcon-root": {
+                color: "white",
+              },
+            }}
+          >
+            <BottomNavigationAction
+              label="Меню"
+              icon={<Category />}
+              onClick={toggleDrawer(true)}
+            />
+            <BottomNavigationAction
+              label="Оплата"
+              icon={<Payment />}
+              onClick={handlePayOrder}
+            />
+            <BottomNavigationAction
+              label="Сохранить"
+              icon={<Save />}
+              onClick={handleConfirmOrder}
+            />
+          </BottomNavigation>
+        </div>
+
+        {/* --- Drawer снизу --- */}
+        <Drawer
+          anchor="bottom"
+          open={drawerOpen}
+          onClose={toggleDrawer(false)}
+          PaperProps={{
+            sx: {
+              background: "#111",
+              color: "white",
+              borderTopLeftRadius: "16px",
+              borderTopRightRadius: "16px",
+              height: "80%",
+            },
+          }}
+        >
+          <Box sx={{ p: 2 }}>
+            <Box
+              sx={{
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "space-between",
+                mb: 2,
+              }}
+            >
+              <IconButton color="inherit" onClick={handleBackInDrawer}>
+                {drawerLevel === "items" ? <ArrowBack /> : <Close />}
+              </IconButton>
+              <Typography variant="h6">
+                {drawerLevel === "items" ? selectedCategory?.name : "Категории"}
+              </Typography>
+              <Box sx={{ width: 40 }} />
+            </Box>
+
+            {drawerLevel === "categories" && (
+              <div className="grid grid-cols-2 gap-2">
+                {categoriesData?.data.map((cat) => (
+                  <Button
+                    key={cat.id}
+                    variant="contained"
+                    onClick={() => handleSelectCategory(cat)}
+                    sx={{
+                      background: "rgba(255,255,255,0.1)",
+                      color: "white",
+                      height: "80px",
+                      "&:hover": { background: "rgba(255,255,255,0.2)" },
+                    }}
+                  >
+                    {cat.name}
+                  </Button>
+                ))}
+              </div>
+            )}
+
+            {drawerLevel === "items" && (
+              <div className="grid grid-cols-2 gap-2">
+                {menuItemsData?.data?.map((item) => (
+                  <Button
+                    key={item.id}
+                    onClick={() => handleMenuItemClick(item)}
+                    variant="contained"
+                    sx={{
+                      background: "rgba(255,255,255,0.1)",
+                      color: "white",
+                      height: "100px",
+                      flexDirection: "column",
+                      "&:hover": { background: "rgba(255,255,255,0.2)" },
+                    }}
+                  >
+                    <span className="font-bold">{item.name}</span>
+                    <span className="text-sm">{item.price} ₽</span>
+                  </Button>
+                ))}
+              </div>
+            )}
+          </Box>
+        </Drawer>
       </div>
     </div>
   );
