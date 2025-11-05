@@ -1,11 +1,11 @@
-// Vercel serverless function
 export default async function handler(req, res) {
-  const backendBase = "http://46.62.232.61:8092"; // твой HTTP backend
+  const backendBase = "http://46.62.232.61:8092";
 
-  // создаём полный URL
-  const url = `${backendBase}${req.url}`;
+  // убираем /api из пути
+  const path = req.url.replace(/^\/api/, "");
 
-  // проксируем запрос
+  const url = `${backendBase}${path}`;
+
   const response = await fetch(url, {
     method: req.method,
     headers: req.headers,
