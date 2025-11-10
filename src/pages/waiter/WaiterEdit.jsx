@@ -73,7 +73,11 @@ function WaiterEdit() {
   // orderCreatedAt будет вычисляться после загрузки orderData
 
   // --- Получаем заказ ---
-  const { data: orderData, isLoading } = useGetSingleOrderQuery({
+  const {
+    data: orderData,
+    isLoading,
+    refetch,
+  } = useGetSingleOrderQuery({
     orderId: Number(orderId),
     tableId: Number(tableId),
     waiterId,
@@ -84,6 +88,10 @@ function WaiterEdit() {
   const orderCompletedAt = orderData?.data?.completedAt || "-";
 
   const [orderItems, setOrderItems] = useState([]);
+
+  useEffect(() => {
+    refetch();
+  }, []);
 
   useEffect(() => {
     if (orderData?.data?.orderItems) {
@@ -185,6 +193,15 @@ function WaiterEdit() {
   };
 
   const handlePayOrder = async () => {
+    const hasStartedItems = orderItems.some(
+      (item) => item.status === "Started"
+    );
+
+    if (hasStartedItems) {
+      toast.error("Нельзя оплачивать заказ — блюда пока не готовятся!");
+      return;
+    }
+
     await payOrder({ orderId: Number(orderId) });
     navigate("/WaiterHome");
   };
@@ -292,7 +309,7 @@ function WaiterEdit() {
                 >
                   <div className="flex-1 text-sm">
                     <div className="font-medium truncate">
-                     #{item.id} {menuItem?.name || "Блюдо"} 
+                      #{item.id} {menuItem?.name || "Блюдо"}
                     </div>
                     <div className="text-xs text-white/60">
                       {formatTime(item.startedAt || "-")}

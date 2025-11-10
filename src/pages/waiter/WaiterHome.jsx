@@ -1,7 +1,7 @@
 import "react-loading-skeleton/dist/skeleton.css";
 import Skeleton from "react-loading-skeleton";
 import { toast, Toaster } from "react-hot-toast";
-import { Bell, Search } from "lucide-react";
+import { Bell, Search, User, DollarSign, Clock } from "lucide-react";
 import { useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import {
@@ -10,6 +10,12 @@ import {
   useLazyGetOrderIdQuery,
   useLazyGetOrderTotalQuery,
 } from "../../store/orderApi";
+import {
+  useGetOrdersCountQuery,
+  useGetOrdersTotalQuery,
+  useGetAvgOrderTimeQuery,
+  useGetProfileQuery,
+} from "../../store/waiterApi";
 
 export default function WaiterHome() {
   const { data, isLoading, isError, refetch } = useGetAllTablesQuery({
@@ -21,11 +27,20 @@ export default function WaiterHome() {
 
   const [getOrderId] = useLazyGetOrderIdQuery();
   const [getOrderTotal] = useLazyGetOrderTotalQuery();
-  const waiterId = 1;
   const [createOrder] = useCreateOrderMutation();
+  const { data: profile } = useGetProfileQuery();
   const [tables, setTables] = useState([]);
   const [ordersByTable, setOrdersByTable] = useState({});
   const navigate = useNavigate();
+  const waiterId =  profile?.data?.employeeId || 0;
+
+  // === Статистика официанта ===
+  const { data: ordersCount, isLoading: isLoadingCount } =
+    useGetOrdersCountQuery();
+  const { data: ordersTotal, isLoading: isLoadingTotal } =
+    useGetOrdersTotalQuery();
+  const { data: avgOrderTime, isLoading: isLoadingAvg } =
+    useGetAvgOrderTimeQuery();
 
   useEffect(() => {
     refetch();
@@ -53,16 +68,15 @@ export default function WaiterHome() {
           if (orderId) {
             updatedOrders[table.id] = orderId;
             const totalResp = await getOrderTotal({ orderId }).unwrap();
-            const total = totalResp?.data || 0;
+            const total = totalResp?.data?.total || 0;
 
             const index = updatedTables.findIndex((t) => t.id === table.id);
-            if (index !== -1) updatedTables[index].totalPrice = total;
+            if (index !== -1) {
+              updatedTables[index].totalPrice = total;
+            }
           }
         } catch (err) {
-          console.error(
-            `Ошибка при загрузке данных для стола ${table.id}:`,
-            err
-          );
+          console.error(`Ошибка для стола ${table.id}:`, err);
         }
       }
 
@@ -71,42 +85,26 @@ export default function WaiterHome() {
     }
 
     initTables();
-  }, [data, getOrderId, getOrderTotal]);
+  }, [data, getOrderId, getOrderTotal, refetch]);
 
   const handleCreateOrder = async (tableId) => {
     try {
-      const payload = { tableId, waiterId };
-      const response = await createOrder(payload).unwrap();
-      const orderId = response.data.id;
-      navigate(`/WaiterEdit/${tableId}/${orderId}`);
-    } catch (error) {
-      console.error("❌ Ошибка при создании заказа:", error);
+      const response = await createOrder({ tableId, waiterId }).unwrap();
+      navigate(`/WaiterEdit/${tableId}/${response.data.id}`);
+    } catch (err) {
+      console.error("Ошибка создания заказа:", err);
+      toast.error("Ошибка создания заказа");
     }
   };
 
-  const handleTableClick = async (table) => {
+  const handleTableClick = (table) => {
     if (!table.isActive) return;
+    const orderId = ordersByTable[table.id];
 
-    const savedOrderId = ordersByTable[table.id];
-
-    if (table.isFree) {
-      await handleCreateOrder(table.id);
-    } else if (savedOrderId) {
-      navigate(`/WaiterEdit/${table.id}/${savedOrderId}`);
-    } else {
-      toast.error("Подождите, идет загрузка...");
-    }
+    if (table.isFree) handleCreateOrder(table.id);
+    else if (orderId) navigate(`/WaiterEdit/${table.id}/${orderId}`);
+    else toast.error("Подождите, идет загрузка...");
   };
-
-  if (isLoading)
-    return (
-      <div className="p-4 text-black bg-black min-h-screen flex justify-center items-center">
-        <div className="animate-spin border-4 border-t-white border-white/30 w-16 h-16 rounded-full" />
-      </div>
-    );
-
-  if (isError)
-    return <div className="p-4 text-red-500 text-center">Ошибка загрузки</div>;
 
   return (
     <div className="p-2 sm:p-4 bg-black text-white min-h-screen">
@@ -137,25 +135,45 @@ export default function WaiterHome() {
             <Search size={18} />
           </button>
           <button className="px-3 py-2 bg-white/20 rounded-lg flex items-center gap-1">
-            <Bell size={18} />
-            <span className="text-xs sm:text-sm">2</span>
+            <User size={18} />
+            <span className="text-xs sm:text-sm">{profile?.data?.name}</span>
           </button>
         </div>
       </div>
 
+      {/* Статистика */}
+      <div className="grid grid-cols-3 gap-3 mb-4">
+        <div className="p-4 bg-[#1a1a1a] rounded-2xl flex flex-col items-center justify-center gap-1 animate-fadeIn">
+          <User size={24} className="text-purple-500" />
+          <div className="text-sm text-gray-400">Кол-во заказов</div>
+          <div className="text-xl font-bold mt-1">
+            {isLoadingCount ? <Skeleton width={40} /> : ordersCount?.data}
+          </div>
+        </div>
+
+        <div className="p-4 bg-[#1a1a1a] rounded-2xl flex flex-col items-center justify-center gap-1 animate-fadeIn">
+          <DollarSign size={24} className="text-green-500" />
+          <div className="text-sm text-gray-400">Сумма заказов</div>
+          <div className="text-xl font-bold mt-1">
+            {isLoadingTotal ? <Skeleton width={60} /> : ordersTotal?.data} ₽
+          </div>
+        </div>
+
+        <div className="p-4 bg-[#1a1a1a] rounded-2xl flex flex-col items-center justify-center gap-1 animate-fadeIn">
+          <Clock size={24} className="text-yellow-500" />
+          <div className="text-sm text-gray-400">Среднее время заказа</div>
+          <div className="text-xl font-bold mt-1">
+            {isLoadingAvg ? (
+              <Skeleton width={60} />
+            ) : (
+              avgOrderTime?.data?.split(".")[0]
+            )}
+          </div>
+        </div>
+      </div>
+
       {/* Tables grid */}
-      <div
-        className="
-        grid 
-        grid-cols-2 
-        sm:grid-cols-3 
-        md:grid-cols-4 
-        lg:grid-cols-5 
-        xl:grid-cols-6
-        gap-3 
-        py-4
-      "
-      >
+      <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-3 py-4">
         {tables.map((table) => (
           <div
             key={table.id}
@@ -201,10 +219,9 @@ export default function WaiterHome() {
                 ) : ordersByTable[table.id] ? (
                   `Заказ #${ordersByTable[table.id]}`
                 ) : (
-                  <Skeleton width={40} style={{ backgroundColor: "#010101" }} />
+                  <Skeleton width={40} />
                 )}
               </span>
-
               <div className="text-sm sm:text-lg font-bold">
                 {table.isFree ? "" : `${table.totalPrice} ₽`}
               </div>

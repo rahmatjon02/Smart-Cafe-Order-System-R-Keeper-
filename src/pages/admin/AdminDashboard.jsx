@@ -1,69 +1,74 @@
-import StatCard from "../../components/adminUI/StatCard";
+import { useEffect, useState } from "react";
 
-export function AdminDashboard() {
+export function AdminDashboard({ setTab }) {
+  const [currentTime, setCurrentTime] = useState("");
+
+  useEffect(() => {
+    const updateClock = () => {
+      const now = new Date();
+      const formatted = now.toLocaleString("ru-RU", {
+        day: "2-digit",
+        month: "2-digit",
+        year: "numeric",
+        hour: "2-digit",
+        minute: "2-digit",
+        second: "2-digit",
+      });
+      setCurrentTime(formatted);
+    };
+
+    updateClock(); // сразу установить при монтировании
+    const timer = setInterval(updateClock, 1000);
+    return () => clearInterval(timer);
+  }, []);
+  
   return (
     <div className="min-h-screen bg-[#0b0b0b] text-white p-6">
       <div className="max-w-7xl mx-auto">
         <div className="flex items-center justify-between mb-6">
           <h1 className="text-2xl font-semibold">Панель администратора</h1>
           <div className="flex items-center gap-3">
-            <div className="text-sm text-gray-400">Сегодня: 28.10.2025</div>
-            <button className="px-4 py-2 bg-[#1f1f1f] rounded-lg">
-              Профиль
-            </button>
+            <div className="text-xl text-gray-400">{currentTime}</div>
           </div>
         </div>
+
         <div className="grid grid-cols-12 gap-4">
           <div className="col-span-8">
             <div className="grid grid-cols-3 gap-4">
-              <StatCard
-                title="Выручка (сегодня)"
-                value="154 320 ₽"
-                delta="+12%"
-              />
-              <StatCard title="Средний чек" value="1 230 ₽" delta="-2%" />
-              <StatCard title="Заказы (сегодня)" value="128" delta="+8%" />
-            </div>
-            
-
-            <div className="mt-4 bg-[#141414] rounded-2xl p-4">
-              <div className="flex items-center justify-between">
-                <div>
-                  <div className="text-sm text-gray-400">
-                    Выручка за 30 дней
+              {/* Выручка */}
+              <div className="rounded-2xl p-4 min-h-24 bg-[#141414]">
+                <div className="text-sm text-gray-400">Выручка (сегодня)</div>
+                <div className="flex items-center justify-between mt-2">
+                  <div className="text-2xl font-bold">154 320 ₽</div>
+                  <div className="text-sm font-semibold text-green-400">
+                    +12%
                   </div>
-                  <div className="text-2xl font-bold">3 480 000 ₽</div>
                 </div>
-                <div className="text-sm text-gray-400">Фильтр: Все точки</div>
               </div>
 
-              <div className="mt-3 h-20 w-full bg-leaner-to-r from-[#1f1f1f] to-[#0f0f0f] rounded-lg flex items-center justify-center text-gray-500">
-                График
+              {/* Средний чек */}
+              <div className="rounded-2xl p-4 min-h-24 bg-[#141414]">
+                <div className="text-sm text-gray-400">Средний чек</div>
+                <div className="flex items-center justify-between mt-2">
+                  <div className="text-2xl font-bold">1 230 ₽</div>
+                  <div className="text-sm font-semibold text-red-400">-2%</div>
+                </div>
               </div>
 
-              <div className="mt-4 grid grid-cols-4 gap-3">
-                <div className="bg-[#1f1f1f] rounded-lg p-3">
-                  <div className="text-xs text-gray-400">Новые клиенты</div>
-                  <div className="font-bold mt-1">1 230</div>
-                </div>
-                <div className="bg-[#1f1f1f] rounded-lg p-3">
-                  <div className="text-xs text-gray-400">Повторные</div>
-                  <div className="font-bold mt-1">420</div>
-                </div>
-                <div className="bg-[#1f1f1f] rounded-lg p-3">
-                  <div className="text-xs text-gray-400">Отмены</div>
-                  <div className="font-bold mt-1">12</div>
-                </div>
-                <div className="bg-[#1f1f1f] rounded-lg p-3">
-                  <div className="text-xs text-gray-400">
-                    Среднее время заказа
+              {/* Заказы */}
+              <div className="rounded-2xl p-4 min-h-24 bg-[#141414]">
+                <div className="text-sm text-gray-400">Заказы (сегодня)</div>
+                <div className="flex items-center justify-between mt-2">
+                  <div className="text-2xl font-bold">128</div>
+                  <div className="text-sm font-semibold text-green-400">
+                    +8%
                   </div>
-                  <div className="font-bold mt-1">18m</div>
                 </div>
               </div>
             </div>
 
             <div className="mt-4 grid grid-cols-2 gap-4">
+              {/* Рейтинг официантов */}
               <div className="bg-[#141414] rounded-2xl p-4">
                 <div className="text-sm text-gray-400">Рейтинг официантов</div>
                 <div className="mt-3 space-y-2">
@@ -80,6 +85,8 @@ export function AdminDashboard() {
                   ))}
                 </div>
               </div>
+
+              {/* Популярные блюда */}
               <div className="bg-[#141414] rounded-2xl p-4">
                 <div className="text-sm text-gray-400">Популярные блюда</div>
                 <div className="mt-3 space-y-2">
@@ -101,22 +108,23 @@ export function AdminDashboard() {
             </div>
           </div>
 
+          {/* Правая колонка */}
           <div className="col-span-4">
             <div className="bg-[#141414] rounded-2xl p-4">
-              <div className="flex items-center justify-between">
-                <div className="text-sm text-gray-400">Операции</div>
-                <div className="text-sm text-gray-400">Фильтр</div>
-              </div>
+              <div className="text-sm text-gray-400">Операции</div>
 
               <div className="mt-3 space-y-3">
-                <button className="w-full bg-[#2a2a2a] py-3 rounded-lg">
-                  Создать акцию
+                <button
+                  onClick={() => setTab("tables")}
+                  className="w-full bg-[#2a2a2a] py-3 rounded-lg hover:bg-[#333]"
+                >
+                  Редактировать столы
                 </button>
-                <button className="w-full bg-[#2a2a2a] py-3 rounded-lg">
-                  Экспорт отчёта
-                </button>
-                <button className="w-full bg-[#8b6af0] text-black py-3 rounded-lg font-semibold">
-                  Просмотреть реестр
+                <button
+                  onClick={() => setTab("categories")}
+                  className="w-full bg-[#8b6af0] text-black py-3 rounded-lg font-semibold hover:bg-[#a591f5]"
+                >
+                  Редактировать категории
                 </button>
               </div>
             </div>
