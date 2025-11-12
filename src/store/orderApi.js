@@ -119,9 +119,12 @@ export const orderApi = createApi({
     }),
 
     getSingleOrder: builder.query({
-      query: ({ orderId, tableId, waiterId }) =>
-        `/Order/get-single-order?OrderId=${orderId}&TableId=${tableId}&WaiterId=${waiterId}`,
+      query: ({ tableId }) => `/Order/get-single-order?&TableId=${tableId}`,
       providesTags: (arg) => [{ type: "OrderItems", id: arg.orderId }],
+    }),
+
+    getSingleOrderById: builder.query({
+      query: ({ OrderId }) => `/Order/get-single-order?OrderId=${OrderId}`,
     }),
 
     getOrderId: builder.query({
@@ -243,7 +246,14 @@ export const orderApi = createApi({
       invalidatesTags: ["Kitchen"],
     }),
 
-    
+    searchMenuItems: builder.query({
+      query: ({ name, pageNumber = 1, pageSize = 100 }) => ({
+        url: `MenuItem/search-menu-items?name=${encodeURIComponent(
+          name
+        )}&pageNumber=${pageNumber}&pageSize=${pageSize}`,
+        method: "GET",
+      }),
+    }),
   }),
 });
 
@@ -278,4 +288,6 @@ export const {
   useUpdateMenuItemMutation,
   useDeleteMenuItemMutation,
   useActivateMenuItemMutation,
+  useSearchMenuItemsQuery,
+  useLazyGetSingleOrderByIdQuery,
 } = orderApi;

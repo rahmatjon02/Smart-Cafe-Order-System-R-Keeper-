@@ -49,12 +49,7 @@ export default function Login() {
         onSubmit={handleSubmit}
         className="relative w-full max-w-sm bg-[#0f0f0f] p-6 rounded-xl shadow"
       >
-        <button
-          onClick={() => navigate(-1)}
-          className="absolute left-5 top-5 hover:text-white/80 font-semibold text-white transition"
-        >
-          назад
-        </button>
+        
         <h2 className="text-xl font-semibold text-center mb-5">Вход в систему</h2>
 
         <label className="block text-sm mb-2">Логин</label>

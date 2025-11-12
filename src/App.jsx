@@ -71,7 +71,7 @@ const App = () => {
           }
         />
         <Route
-          path="WaiterEdit/:tableId/:orderId"
+          path="WaiterEdit/:tableId"
           element={
             <ProtectedRoute allowedRoles={["Admin", "Waiter"]}>
               <WaiterEdit />

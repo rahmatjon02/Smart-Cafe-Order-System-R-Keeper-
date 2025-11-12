@@ -1,7 +1,7 @@
 import "react-loading-skeleton/dist/skeleton.css";
 import Skeleton from "react-loading-skeleton";
 import { toast, Toaster } from "react-hot-toast";
-import { Bell, Search, User, DollarSign, Clock } from "lucide-react";
+import { Bell, Search, User, DollarSign, Clock, LogOut } from "lucide-react";
 import { useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import {
@@ -16,11 +16,12 @@ import {
   useGetAvgOrderTimeQuery,
   useGetProfileQuery,
 } from "../../store/waiterApi";
+import { useGetRoleFromTokenMutation } from "../../store/authApi";
 
 export default function WaiterHome() {
   const { data, isLoading, isError, refetch } = useGetAllTablesQuery({
     pageNumber: 1,
-    pageSize: 200,
+    pageSize: 1000,
     OnlyActive: true,
     OnlyFree: false,
   });
@@ -32,18 +33,30 @@ export default function WaiterHome() {
   const [tables, setTables] = useState([]);
   const [ordersByTable, setOrdersByTable] = useState({});
   const navigate = useNavigate();
-  const waiterId =  profile?.data?.employeeId || 0;
+  const waiterId = profile?.data?.employeeId || 1;
 
   // === Статистика официанта ===
-  const { data: ordersCount, isLoading: isLoadingCount } =
-    useGetOrdersCountQuery();
-  const { data: ordersTotal, isLoading: isLoadingTotal } =
-    useGetOrdersTotalQuery();
-  const { data: avgOrderTime, isLoading: isLoadingAvg } =
-    useGetAvgOrderTimeQuery();
+  const {
+    data: ordersCount,
+    isLoading: isLoadingCount,
+    refetch: refetchCount,
+  } = useGetOrdersCountQuery();
+  const {
+    data: ordersTotal,
+    isLoading: isLoadingTotal,
+    refetch: refetchTotal,
+  } = useGetOrdersTotalQuery();
+  const {
+    data: avgOrderTime,
+    isLoading: isLoadingAvg,
+    refetch: refetchAvg,
+  } = useGetAvgOrderTimeQuery();
 
   useEffect(() => {
     refetch();
+    refetchCount();
+    refetchTotal();
+    refetchAvg();
     if (!data?.data?.length) return;
 
     async function initTables() {
@@ -85,12 +98,38 @@ export default function WaiterHome() {
     }
 
     initTables();
-  }, [data, getOrderId, getOrderTotal, refetch]);
+  }, [
+    data,
+    getOrderId,
+    getOrderTotal,
+    refetch,
+    refetchCount,
+    refetchTotal,
+    refetchAvg,
+  ]);
+
+  const [isAdmin, setIsAdmin] = useState(false);
+  const [getRoleFromToken] = useGetRoleFromTokenMutation();
+
+  const roleCheck = async () => {
+    const token = localStorage.getItem("token");
+    if (token) {
+      const response = await getRoleFromToken(token);
+
+      if (response?.data?.data === "Admin") {
+        setIsAdmin(true);
+      }
+    }
+  };
+
+  useEffect(() => {
+    roleCheck();
+  }, []);
 
   const handleCreateOrder = async (tableId) => {
     try {
-      const response = await createOrder({ tableId, waiterId }).unwrap();
-      navigate(`/WaiterEdit/${tableId}/${response.data.id}`);
+      await createOrder({ tableId, waiterId }).unwrap();
+      navigate(`/WaiterEdit/${tableId}`);
     } catch (err) {
       console.error("Ошибка создания заказа:", err);
       toast.error("Ошибка создания заказа");
@@ -102,8 +141,7 @@ export default function WaiterHome() {
     const orderId = ordersByTable[table.id];
 
     if (table.isFree) handleCreateOrder(table.id);
-    else if (orderId) navigate(`/WaiterEdit/${table.id}/${orderId}`);
-    else toast.error("Подождите, идет загрузка...");
+    else navigate(`/WaiterEdit/${table.id}`);
   };
 
   return (
@@ -116,57 +154,88 @@ export default function WaiterHome() {
           <h1 className="text-xl sm:text-2xl font-bold text-white/90">
             Главная официанта
           </h1>
-          <Link
-            to={"/"}
-            className="bg-[#1f1f1f] px-3 py-2 rounded-lg text-sm hover:bg-[#2a2a2a]"
-          >
-            Админ
-          </Link>
-          <Link
-            to={"/Kitchen"}
-            className="bg-[#1f1f1f] px-3 py-2 rounded-lg text-sm hover:bg-[#2a2a2a]"
-          >
-            Кухня
-          </Link>
+          {isAdmin && (
+            <div className="flex gap-2">
+              <Link
+                to={"/"}
+                className="bg-[#1f1f1f] px-3 py-2 rounded-xs text-sm hover:bg-[#2a2a2a]"
+              >
+                Админ
+              </Link>
+              <Link
+                to={"/Kitchen"}
+                className="bg-[#1f1f1f] px-3 py-2 rounded-xs text-sm hover:bg-[#2a2a2a]"
+              >
+                Кухня
+              </Link>
+            </div>
+          )}
         </div>
 
         <div className="flex gap-2">
-          <button className="px-3 py-2 bg-white/20 rounded-lg">
-            <Search size={18} />
-          </button>
-          <button className="px-3 py-2 bg-white/20 rounded-lg flex items-center gap-1">
+          <button className="px-3 py-2 bg-white/20 rounded-xs flex items-center gap-1">
             <User size={18} />
             <span className="text-xs sm:text-sm">{profile?.data?.name}</span>
+          </button>
+
+          <button
+            onClick={() => {
+              localStorage.removeItem("token");
+              navigate("/login");
+            }}
+            className="px-3 py-2 bg-red-500/70 hover:bg-red-600 text-white rounded-xs transition-all duration-200 flex items-center gap-2"
+          >
+            <LogOut size={18} />
+            <span className="text-sm font-medium">Выйти</span>
           </button>
         </div>
       </div>
 
       {/* Статистика */}
-      <div className="grid grid-cols-3 gap-3 mb-4">
+      <div className="grid grid-cols-3 gap-2 mb-4">
         <div className="p-4 bg-[#1a1a1a] rounded-2xl flex flex-col items-center justify-center gap-1 animate-fadeIn">
           <User size={24} className="text-purple-500" />
-          <div className="text-sm text-gray-400">Кол-во заказов</div>
+          <div className="lg:text-sm text-[10px] text-center text-gray-400">
+            Кол-во заказов
+          </div>
           <div className="text-xl font-bold mt-1">
-            {isLoadingCount ? <Skeleton width={40} /> : ordersCount?.data}
+            {isLoadingCount ? (
+              <Skeleton width={40} />
+            ) : ordersCount?.data ? (
+              ordersCount.data
+            ) : (
+              0
+            )}
           </div>
         </div>
 
         <div className="p-4 bg-[#1a1a1a] rounded-2xl flex flex-col items-center justify-center gap-1 animate-fadeIn">
           <DollarSign size={24} className="text-green-500" />
-          <div className="text-sm text-gray-400">Сумма заказов</div>
+          <div className="lg:text-sm text-[10px] text-center text-gray-400">
+            Сумма заказов
+          </div>
           <div className="text-xl font-bold mt-1">
-            {isLoadingTotal ? <Skeleton width={60} /> : ordersTotal?.data} ₽
+            {isLoadingTotal ? (
+              <Skeleton width={60} />
+            ) : ordersTotal?.data ? (
+              ordersTotal.data
+            ) : (
+              0
+            )}{" "}
+            TJS
           </div>
         </div>
 
         <div className="p-4 bg-[#1a1a1a] rounded-2xl flex flex-col items-center justify-center gap-1 animate-fadeIn">
           <Clock size={24} className="text-yellow-500" />
-          <div className="text-sm text-gray-400">Среднее время заказа</div>
+          <div className="lg:text-sm text-[10px] text-center text-gray-400">
+            Среднее время заказа
+          </div>
           <div className="text-xl font-bold mt-1">
             {isLoadingAvg ? (
               <Skeleton width={60} />
             ) : (
-              avgOrderTime?.data?.split(".")[0]
+              avgOrderTime?.data?.split(".")[0] || "00:00:00"
             )}
           </div>
         </div>
@@ -197,7 +266,7 @@ export default function WaiterHome() {
                 </p>
               </div>
               <div
-                className={`text-[10px] sm:text-xs px-2 py-1 rounded-lg ${
+                className={`text-[10px] sm:text-xs px-2 py-1 rounded-xs ${
                   !table.isActive
                     ? "bg-gray-500 text-gray-200"
                     : table.isFree
@@ -223,7 +292,7 @@ export default function WaiterHome() {
                 )}
               </span>
               <div className="text-sm sm:text-lg font-bold">
-                {table.isFree ? "" : `${table.totalPrice} ₽`}
+                {table.isFree ? "" : `${table.totalPrice} TJS`}
               </div>
             </div>
           </div>

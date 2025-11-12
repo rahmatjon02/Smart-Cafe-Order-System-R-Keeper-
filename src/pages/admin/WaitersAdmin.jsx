@@ -19,7 +19,6 @@ export default function WaitersAdmin() {
       await register(form).unwrap();
       toast.success("Официант добавлен");
       setForm({ username: "", password: "", name: "" });
-      // если нужен список официантов — добавь эндпоинт на бэке и я подключу
     } catch (err) {
       console.error(err);
       toast.error("Ошибка добавления официанта");
@@ -35,13 +34,16 @@ export default function WaitersAdmin() {
         <div className="flex justify-between items-center mb-6">
           <h2 className="text-2xl font-bold">👨‍🍳 Управление официантами</h2>
           <div className="flex gap-2">
-            <Link to="/" className="bg-[#1f1f1f] px-3 py-2 rounded">Главная</Link>
+            <Link to="/" className="bg-[#1f1f1f] px-3 py-2 rounded">
+              Главная
+            </Link>
           </div>
         </div>
 
         <div className="bg-[#141414] p-4 rounded-2xl">
           <div className="mb-4 text-sm text-gray-400">
-            Добавить нового официанта (создаётся пользователь с ролью по умолчанию)
+            Добавить нового официанта (создаётся пользователь с ролью по
+            умолчанию)
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-3 mb-4">
@@ -69,7 +71,7 @@ export default function WaitersAdmin() {
             <button
               onClick={handleAdd}
               disabled={loading}
-              className="bg-green-500 hover:bg-green-600 text-black px-4 py-2 rounded-lg"
+              className="bg-green-500 hover:bg-green-600 text-black px-4 py-2 rounded-xs"
             >
               {loading ? "Добавление..." : "Добавить официанта"}
             </button>

@@ -5,6 +5,7 @@ import {
   Bell,
   Search,
   Check,
+  X,
 } from "lucide-react";
 import {
   AppBar,
@@ -16,6 +17,7 @@ import {
   Typography,
   Box,
   Button,
+  TextField,
 } from "@mui/material";
 import {
   ArrowBack,
@@ -44,14 +46,14 @@ import {
   useConfirmOrderMutation,
   usePayOrderMutation,
   useServeOrderItemMutation,
+  useSearchMenuItemsQuery,
 } from "../../store/orderApi";
+import { useGetProfileQuery } from "../../store/waiterApi";
 
 function WaiterEdit() {
-  const { tableId, orderId } = useParams();
-  const [searchParams] = useSearchParams();
+  const { tableId } = useParams();
   const navigate = useNavigate();
-
-  const waiterId = 1;
+  const { data: profile, refetch: refetchProfile } = useGetProfileQuery();
 
   // Форматирование времени заказа / позиции
   const formatTime = (t) => {
@@ -78,10 +80,9 @@ function WaiterEdit() {
     isLoading,
     refetch,
   } = useGetSingleOrderQuery({
-    orderId: Number(orderId),
     tableId: Number(tableId),
-    waiterId,
   });
+  const orderId = orderData?.data?.id;
 
   const orderCreatedAt = orderData?.data?.createdAt || "-";
 
@@ -90,24 +91,34 @@ function WaiterEdit() {
   const [orderItems, setOrderItems] = useState([]);
 
   useEffect(() => {
-    refetch();
-  }, []);
-
-  useEffect(() => {
     if (orderData?.data?.orderItems) {
       setOrderItems(orderData.data.orderItems);
     }
   }, [orderData]);
 
+  // --- Поиск ---
+  const [isSearching, setIsSearching] = useState(false);
+  const [searchTerm, setSearchTerm] = useState("");
+  const { data: searchResults, isLoading: isSearchingLoading } =
+    useSearchMenuItemsQuery(
+      { name: searchTerm, pageNumber: 1, pageSize: 1000 },
+      { skip: !searchTerm }
+    );
+
+  useEffect(() => {
+    refetch();
+    refetchProfile();
+  }, []);
+
   // --- Меню и категории ---
   const { data: menuData } = useGetMenuItemsQuery({
     pageNumber: 1,
-    pageSize: 100,
+    pageSize: 1000,
   });
 
   const { data: categoriesData } = useGetCategoriesQuery({
     pageNumber: 1,
-    pageSize: 200,
+    pageSize: 1000,
   });
 
   const [selectedCategory, setSelectedCategory] = useState("1");
@@ -166,17 +177,17 @@ function WaiterEdit() {
   };
 
   const handleCancelOrder = async () => {
-    const hasStartedItems = orderItems.some(
-      (item) =>
-        item.status === "Started" ||
-        item.status === "Ready" ||
-        item.status === "Served"
-    );
+    // const hasStartedItems = orderItems.some(
+    //   (item) =>
+    //     item.status === "Started" ||
+    //     item.status === "Ready" ||
+    //     item.status === "Served"
+    // );
 
-    if (hasStartedItems) {
-      toast.error("Нельзя отменять заказ — блюда уже готовятся!");
-      return;
-    }
+    // if (hasStartedItems) {
+    //   toast.error("Нельзя отменять заказ — блюда уже готовятся!");
+    //   return;
+    // }
 
     try {
       await cancelOrder(Number(orderId)).unwrap();
@@ -234,11 +245,11 @@ function WaiterEdit() {
           <div className="flex gap-3 items-center justify-between w-[61.5%]">
             <Link
               to={"/WaiterHome"}
-              className="h-12 w-40 bg-white/20 flex items-center justify-center text-white rounded-lg text-sm font-medium"
+              className="h-12 w-40 bg-white/20 flex items-center justify-center text-white rounded-xs text-sm font-medium"
             >
               Назад
             </Link>
-            <div className="text-sm h-12 w-4/5 px-4 py-2 bg-white/20 text-white rounded-lg flex items-center justify-between">
+            <div className="text-sm h-12 w-4/5 px-4 py-2 bg-white/20 text-white rounded-xs flex items-center justify-between">
               <div className="flex items-center justify-between w-full">
                 <div className="font-medium text-white">
                   Заказ №{orderData?.data?.id || orderId}
@@ -252,19 +263,45 @@ function WaiterEdit() {
           </div>
 
           <div className="flex items-center gap-2 w-[38.5%] justify-between">
-            <button
-              onClick={handleCancelOrder}
-              className="px-3 py-2 w-50 h-12 bg-white/20 text-red-400 rounded-lg text-sm cursor-pointer"
-            >
-              Отменить заказ
-            </button>
-            <button className="flex items-center justify-center gap-3 px-3 py-2 w-50 h-12 bg-white/20 text-white rounded-lg">
-              <Bell size={20} />
-              <span>2</span>
-            </button>
-            <button className="flex items-center justify-center px-3 py-2 w-50 h-12 bg-white/20 text-white rounded-lg">
-              <Search size={20} />
-            </button>
+            {!isSearching ? (
+              <>
+                <button
+                  onClick={handleCancelOrder}
+                  className="px-3 py-2 w-50 h-12 bg-white/20 text-red-400 rounded-xs text-sm cursor-pointer"
+                >
+                  Отменить заказ
+                </button>
+                <button className="flex items-center justify-center gap-3 px-3 py-2 w-50 h-12 bg-white/20 text-white rounded-xs">
+                  <Bell size={20} />
+                  <span>2</span>
+                </button>
+                <button
+                  onClick={() => setIsSearching(true)}
+                  className="flex items-center justify-center px-3 py-2 w-50 h-12 bg-white/20 text-white rounded-xs"
+                >
+                  <Search size={20} />
+                </button>
+              </>
+            ) : (
+              <div className="flex items-center w-full gap-2">
+                <input
+                  type="text"
+                  placeholder="Введите название блюда..."
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  className="flex-1 h-12 bg-white/20 text-white px-3 rounded-xs focus:outline-none placeholder-white/60"
+                />
+                <button
+                  onClick={() => {
+                    setIsSearching(false);
+                    setSearchTerm("");
+                  }}
+                  className="bg-red-500/80 hover:bg-red-600 text-white p-3 rounded-xs"
+                >
+                  <X size={20} />
+                </button>
+              </div>
+            )}
           </div>
         </div>
       </div>
@@ -274,14 +311,8 @@ function WaiterEdit() {
         {/* Left Panel */}
         <div className="flex-1 flex flex-col gap-1 overflow-hidden">
           <div className="flex gap-1">
-            <button className="flex-1 flex items-center justify-center py-2 bg-white/20 rounded-tl-xl">
-              <ChevronLeft size={20} />
-            </button>
-            <button className="flex-1 py-2 bg-white/20 font-medium">
+            <button className="flex-1 py-2 bg-white/20 font-medium rounded-t-xl">
               Все гости
-            </button>
-            <button className="flex-1 flex items-center justify-center py-2 bg-white/20 rounded-tr-xl">
-              <ChevronRight size={20} />
             </button>
           </div>
 
@@ -321,14 +352,14 @@ function WaiterEdit() {
                     {item.quantity} шт
                   </div>
                   <div className="text-right text-sm font-medium">
-                    {item.priceAtOrderTime} ₽
+                    {item.priceAtOrderTime} TJS
                   </div>
 
                   <button
                     title="Удалить блюдо из заказа"
                     className={`${
                       item.status === "New" ? "block" : "hidden"
-                    } ml-1 text-red-500 cursor-pointer rounded-lg p-3 hover:bg-white/10`}
+                    } ml-1 text-red-500 cursor-pointer rounded-xs p-3 hover:bg-white/10`}
                     onClick={() => handleRemoveItem(item)}
                   >
                     <Trash size={15} />
@@ -337,7 +368,7 @@ function WaiterEdit() {
                   <button
                     className={`${
                       item.status === "Ready" ? "block" : "hidden"
-                    } ml-1 text-black bg-green-300 cursor-pointer rounded-lg p-3 hover:bg-white/50`}
+                    } ml-1 text-black bg-green-300 cursor-pointer rounded-xs p-3 hover:bg-white/50`}
                     onClick={() => handleServedItem(item)}
                   >
                     <Check size={15} />
@@ -364,14 +395,14 @@ function WaiterEdit() {
           <div className="pt-1 flex gap-2">
             <button
               onClick={handlePayOrder}
-              className="flex-1 py-3 bg-green-600 hover:bg-green-700 rounded-lg font-bold text-base flex justify-between items-center px-4"
+              className="flex-1 py-3 bg-green-600 hover:bg-green-700 rounded-xs font-bold text-base flex justify-between items-center px-4"
             >
               <span>Оплата</span>
-              <span>{totalPrice} ₽</span>
+              <span>{totalPrice} TJS</span>
             </button>
             <button
               onClick={handleConfirmOrder}
-              className="flex-1 py-3 bg-white/10 hover:bg-gray-600 rounded-lg font-bold text-base"
+              className="flex-1 py-3 bg-white/10 hover:bg-gray-600 rounded-xs font-bold text-base"
             >
               Сохранить заказ
             </button>
@@ -403,17 +434,19 @@ function WaiterEdit() {
             </h2>
           </div>
           <div className="flex-1 grid grid-cols-3 gap-1 overflow-y-auto scrollbar-hide content-start">
-            {menuItemsData?.data?.map((item) => (
-              <button
-                key={item.id}
-                className="bg-white/10 h-24 font-medium text-xs flex flex-col gap-2 items-center justify-center hover:opacity-90 transition-opacity"
-                onClick={() => handleMenuItemClick(item)}
-              >
-                <p className="font-bold">{item.name}</p>
-                <p>{item.description}</p>
-                <p>{item.price} ₽</p>
-              </button>
-            ))}
+            {(searchTerm ? searchResults?.data : menuItemsData?.data)?.map(
+              (item) => (
+                <button
+                  key={item.id}
+                  className="bg-white/10 h-24 font-medium text-xs flex flex-col gap-2 items-center justify-center hover:opacity-90 transition-opacity"
+                  onClick={() => handleMenuItemClick(item)}
+                >
+                  <p className="font-bold">{item.name}</p>
+                  <p>{item.description}</p>
+                  <p>{item.price} TJS</p>
+                </button>
+              )
+            )}
           </div>
         </div>
       </div>
@@ -421,30 +454,65 @@ function WaiterEdit() {
       {/* --- Mobile layout --- */}
       <div className="lg:hidden flex flex-col min-h-[92vh] overflow-hidden">
         <AppBar position="static" sx={{ background: "rgba(255,255,255,0.1)" }}>
-          <Toolbar sx={{ display: "flex", justifyContent: "space-between" }}>
-            <IconButton color="inherit" onClick={() => navigate("/WaiterHome")}>
-              <ArrowBack />
-            </IconButton>
-            <Typography variant="body1">
-              Заказ #{orderData?.data?.id || orderId} | Стол -{" "}
-              {orderData?.data?.tableId || tableId}
-            </Typography>
-            <Box>
-              <IconButton color="inherit">
-                <Search />
+          {!isSearching ? (
+            <Toolbar sx={{ display: "flex", justifyContent: "space-between" }}>
+              <IconButton
+                color="inherit"
+                onClick={() => navigate("/WaiterHome")}
+              >
+                <ArrowBack />
               </IconButton>
-              <IconButton color="inherit">
-                <Bell />
+              <Typography variant="body1">
+                Заказ #{orderData?.data?.id || orderId} | Стол -{" "}
+                {orderData?.data?.tableId || tableId}
+              </Typography>
+              <Box>
+                <IconButton
+                  onClick={() => setIsSearching(true)}
+                  color="inherit"
+                >
+                  <Search />
+                </IconButton>
+                <IconButton onClick={handleCancelOrder} color="inherit">
+                  <Trash color="red" />
+                </IconButton>
+              </Box>
+            </Toolbar>
+          ) : (
+            <Toolbar sx={{ display: "flex", justifyContent: "space-between" }}>
+              <IconButton color="inherit" onClick={() => setIsSearching(false)}>
+                <ArrowBack />
               </IconButton>
-            </Box>
-          </Toolbar>
+              <TextField
+                autoFocus
+                variant="standard"
+                placeholder="Поиск блюд"
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                InputProps={{
+                  disableUnderline: true,
+                  style: { color: "white" },
+                }}
+                sx={{ flex: 1 }}
+              />
+              <IconButton
+                color="inherit"
+                onClick={() => {
+                  setIsSearching(false);
+                  setSearchTerm("");
+                }}
+              >
+                <Close />
+              </IconButton>
+            </Toolbar>
+          )}
         </AppBar>
 
         <div className="flex flex-col justify-between h-full">
           {/* Список заказанных блюд */}
           <div className=" p-2 flex flex-col gap-2">
             {/* Красивое время заказа */}
-            <div className="p-3 bg-white/6 rounded-lg text-center flex items-center justify-center gap-5">
+            <div className="p-3 bg-white/6 rounded-xs text-center flex items-center justify-center gap-5">
               <div className="text-base text-white/60">Время заказа</div>
               <div className="font-bold text-lg">
                 {formatTime(orderCreatedAt) || "—"}
@@ -485,14 +553,14 @@ function WaiterEdit() {
                       {item.quantity} шт
                     </div>
                     <div className="text-right text-sm font-medium">
-                      {item.priceAtOrderTime} ₽
+                      {item.priceAtOrderTime} TJS
                     </div>
 
                     <button
                       title="Удалить блюдо из заказа"
                       className={`${
                         item.status === "New" ? "block" : "hidden"
-                      } ml-1 text-red-500 cursor-pointer rounded-lg p-3 hover:bg-white/10`}
+                      } ml-1 text-red-500 cursor-pointer rounded-xs p-3 hover:bg-white/10`}
                       onClick={() => handleRemoveItem(item)}
                     >
                       <Trash size={15} />
@@ -501,7 +569,7 @@ function WaiterEdit() {
                     <button
                       className={`${
                         item.status === "Ready" ? "block" : "hidden"
-                      } ml-1 text-black bg-green-300 cursor-pointer rounded-lg p-3 hover:bg-white/50`}
+                      } ml-1 text-black bg-green-300 cursor-pointer rounded-xs p-3 hover:bg-white/50`}
                       onClick={() => handleServedItem(item)}
                     >
                       <Check size={15} />
@@ -631,7 +699,7 @@ function WaiterEdit() {
                     }}
                   >
                     <span className="font-bold">{item.name}</span>
-                    <span className="text-sm">{item.price} ₽</span>
+                    <span className="text-sm">{item.price} TJS</span>
                   </Button>
                 ))}
               </div>

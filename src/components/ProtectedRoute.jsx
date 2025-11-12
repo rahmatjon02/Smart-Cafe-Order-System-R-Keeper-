@@ -29,7 +29,7 @@ export default function ProtectedRoute({ children, allowedRoles }) {
           <div className="flex items-center gap-5">
             <button
               onClick={() => navigate(-1)}
-              className="px-4 py-2 bg-yellow-500 hover:bg-yellow-600 rounded-lg font-semibold text-black transition"
+              className="px-4 py-2 bg-yellow-500 hover:bg-yellow-600 rounded-xs font-semibold text-black transition"
             >
               ← Вернуться назад
             </button>
