@@ -77,7 +77,9 @@ export function AdminDashboard() {
         {/* Верхние карточки */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-4">
           <div className="rounded-2xl p-4 bg-[#141414]">
-            <div className="text-sm text-gray-400">Выручка (сегодня)</div>
+            <div className="text-sm text-gray-400">Выручка
+              
+            </div>
             <div className="flex items-center justify-between mt-2">
               <div className="text-2xl font-bold">
                 {revenueLoading ? "..." : `${revenueData?.data ?? 0} TJS`}
@@ -97,7 +99,9 @@ export function AdminDashboard() {
           </div>
 
           <div className="rounded-2xl p-4 bg-[#141414]">
-            <div className="text-sm text-gray-400">Заказы (сегодня)</div>
+            <div className="text-sm text-gray-400">Заказы
+              
+            </div>
             <div className="flex items-center justify-between mt-2">
               <div className="text-2xl font-bold">
                 {ordersLoading ? "..." : ordersData?.data ?? 0}
@@ -106,7 +110,9 @@ export function AdminDashboard() {
           </div>
 
           <div className="rounded-2xl p-4 bg-[#141414]">
-            <div className="text-sm text-gray-400">Заказы (сегодня)</div>
+            <div className="text-sm text-gray-400">Среднее время
+              
+            </div>
             <div className="flex items-center justify-between mt-2">
               <div className="text-2xl font-bold">
                 {avgTimeLoading

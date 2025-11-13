@@ -17,6 +17,7 @@ import {
   useGetProfileQuery,
 } from "../../store/waiterApi";
 import { useGetRoleFromTokenMutation } from "../../store/authApi";
+import useAuth from "../../hooks/useAuth";
 
 export default function WaiterHome() {
   const { data, isLoading, isError, refetch } = useGetAllTablesQuery({
@@ -114,9 +115,10 @@ export default function WaiterHome() {
   const roleCheck = async () => {
     const token = localStorage.getItem("token");
     if (token) {
-      const response = await getRoleFromToken(token);
+      // теперь просто используем твой готовый хук useAuth
+      const { role } = useAuth();
 
-      if (response?.data?.data === "Admin") {
+      if (role === "Admin") {
         setIsAdmin(true);
       }
     }

@@ -5,13 +5,14 @@ import { Link } from "react-router-dom";
 import TablesAdmin from "./TablesAdmin";
 import CategoriesAdmin from "./CategoriesAdmin";
 import WaitersAdmin from "./WaitersAdmin";
+import DiscountsAdmin from "./DiscountsAdmin";
 
 export default function AdminPanel() {
   const [tab, setTab] = React.useState("dashboard");
 
   return (
     <div className="min-h-screen bg-[#0b0b0b] text-white">
-      <div className="p-4 max-w-7xl mx-auto">
+      <div className="p-4 max-w-7xl mx-auto px-3 sm:px-6">
         {/* Шапка */}
         <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between mb-6 gap-4">
           {/* Левая часть */}
@@ -22,70 +23,46 @@ export default function AdminPanel() {
 
             <Link
               to={"/WaiterHome"}
-              className="bg-[#1f1f1f] px-3 py-2 rounded-xs text-sm hover:bg-[#2a2a2a] transition"
+              className="bg-[#1f1f1f] px-3 py-2 rounded-md text-sm hover:bg-[#2a2a2a] transition"
             >
               Официант
             </Link>
             <Link
               to={"/Kitchen"}
-              className="bg-[#1f1f1f] px-3 py-2 rounded-xs text-sm hover:bg-[#2a2a2a] transition"
+              className="bg-[#1f1f1f] px-3 py-2 rounded-md text-sm hover:bg-[#2a2a2a] transition"
             >
               Кухня
             </Link>
           </div>
 
           {/* Кнопки навигации */}
-          <div className="flex flex-wrap sm:flex-nowrap gap-2 sm:gap-3 justify-center lg:justify-end overflow-x-auto scrollbar-hide">
-            <button
-              className={`px-3 sm:px-4 py-2 rounded-xs text-sm sm:text-base whitespace-nowrap ${
-                tab === "dashboard"
-                  ? "bg-[#8b6af0] text-black"
-                  : "bg-[#1f1f1f] hover:bg-[#2a2a2a]"
-              }`}
-              onClick={() => setTab("dashboard")}
-            >
-              Панель
-            </button>
-            <button
-              className={`px-3 sm:px-4 py-2 rounded-xs text-sm sm:text-base whitespace-nowrap ${
-                tab === "orders"
-                  ? "bg-[#8b6af0] text-black"
-                  : "bg-[#1f1f1f] hover:bg-[#2a2a2a]"
-              }`}
-              onClick={() => setTab("orders")}
-            >
-              Заказы
-            </button>
-            <button
-              onClick={() => setTab("tables")}
-              className={`px-3 sm:px-4 py-2 rounded-xs text-sm sm:text-base whitespace-nowrap ${
-                tab === "tables"
-                  ? "bg-[#8b6af0] text-black"
-                  : "bg-[#1f1f1f] hover:bg-[#2a2a2a]"
-              }`}
-            >
-              Столы
-            </button>
-            <button
-              onClick={() => setTab("categories")}
-              className={`px-3 sm:px-4 py-2 rounded-xs text-sm sm:text-base whitespace-nowrap ${
-                tab === "categories"
-                  ? "bg-[#8b6af0] text-black"
-                  : "bg-[#1f1f1f] hover:bg-[#2a2a2a]"
-              }`}
-            >
-              Категории
-            </button>
-            <button
-              onClick={() => setTab("waiters")}
-              className={`px-3 sm:px-4 py-2 rounded-xs text-sm sm:text-base whitespace-nowrap ${
-                tab === "waiters"
-                  ? "bg-[#8b6af0] text-black"
-                  : "bg-[#1f1f1f] hover:bg-[#2a2a2a]"
-              }`}
-            >
-              Официанты
-            </button>
+          <div className="relative">
+            <div className="flex gap-2 sm:gap-3 overflow-x-auto scrollbar-hide snap-x snap-mandatory pb-2 sm:pb-0">
+              {[
+                { key: "dashboard", label: "Панель" },
+                { key: "orders", label: "Заказы" },
+                { key: "tables", label: "Столы" },
+                { key: "categories", label: "Категории" },
+                { key: "waiters", label: "Официанты" },
+                { key: "discounts", label: "Акции" },
+              ].map((btn) => (
+                <button
+                  key={btn.key}
+                  onClick={() => setTab(btn.key)}
+                  className={`px-4 py-2 rounded-md text-sm sm:text-base whitespace-nowrap snap-start transition ${
+                    tab === btn.key
+                      ? "bg-[#8b6af0] text-black"
+                      : "bg-[#1f1f1f] hover:bg-[#2a2a2a]"
+                  }`}
+                >
+                  {btn.label}
+                </button>
+              ))}
+            </div>
+
+            {/* Градиентные края — для красоты на мобильных */}
+            {/* <div className="absolute left-0 top-0 bottom-0 w-8 bg-gradient-to-r from-[#0b0b0b] to-transparent pointer-events-none"></div> */}
+            {/* <div className="absolute right-0 top-0 bottom-0 w-8 bg-gradient-to-l from-[#0b0b0b] to-transparent pointer-events-none"></div> */}
           </div>
         </div>
 
@@ -96,6 +73,7 @@ export default function AdminPanel() {
           {tab === "tables" && <TablesAdmin />}
           {tab === "categories" && <CategoriesAdmin />}
           {tab === "waiters" && <WaitersAdmin />}
+          {tab === "discounts" && <DiscountsAdmin />}
         </div>
       </div>
     </div>

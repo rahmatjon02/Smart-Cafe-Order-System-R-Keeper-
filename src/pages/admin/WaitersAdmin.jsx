@@ -3,11 +3,14 @@ import React, { useState } from "react";
 import { useRegisterMutation } from "../../store/authApi";
 import toast, { Toaster } from "react-hot-toast";
 import { Link } from "react-router-dom";
+import { useGetAllWaitersQuery } from "../../store/waiterApi";
 
 export default function WaitersAdmin() {
   const [register] = useRegisterMutation();
   const [form, setForm] = useState({ username: "", password: "", name: "" });
   const [loading, setLoading] = useState(false);
+  const { data: waitersData, isLoading: waitersLoading } =
+    useGetAllWaitersQuery({ pageNumber: 1, pageSize: 200 });
 
   const handleAdd = async () => {
     if (!form.username || !form.password || !form.name) {
@@ -32,12 +35,9 @@ export default function WaitersAdmin() {
       <Toaster />
       <div className="max-w-3xl mx-auto">
         <div className="flex justify-between items-center mb-6">
-          <h2 className="text-2xl font-bold">👨‍🍳 Управление официантами</h2>
-          <div className="flex gap-2">
-            <Link to="/" className="bg-[#1f1f1f] px-3 py-2 rounded">
-              Главная
-            </Link>
-          </div>
+          <h2 className="text-lg lg:text-2xl font-bold">
+            👨‍🍳 Управление официантами
+          </h2>
         </div>
 
         <div className="bg-[#141414] p-4 rounded-2xl">
@@ -46,7 +46,7 @@ export default function WaitersAdmin() {
             умолчанию)
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-3 mb-4">
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-3 mb-4">
             <input
               placeholder="username"
               className="bg-[#1a1a1a] px-3 py-2 rounded"
@@ -65,20 +65,34 @@ export default function WaitersAdmin() {
               value={form.name}
               onChange={(e) => setForm({ ...form, name: e.target.value })}
             />
-          </div>
 
-          <div className="flex justify-end gap-3">
             <button
               onClick={handleAdd}
               disabled={loading}
               className="bg-green-500 hover:bg-green-600 text-black px-4 py-2 rounded-xs"
             >
-              {loading ? "Добавление..." : "Добавить официанта"}
+              {loading ? "Добавление..." : "Добавить"}
             </button>
           </div>
         </div>
 
-        {/* Если позже появится эндпоинт для листинга официантов — можно показать таблицу ниже */}
+        <table className="bg-[#141414] p-4 rounded-2xl w-full mt-8 table-auto border-collapse ">
+          <thead className="border-b">
+            <tr>
+              <th className="rounded-2xl px-4 py-2 text-left">Name</th>
+              <th className="rounded-2xl px-4 py-2 text-left">Username</th>
+            </tr>
+          </thead>
+
+          <tbody>
+            {waitersData?.data?.map((waiter) => (
+              <tr key={waiter.id}>
+                <td className="px-4 py-2 text-left">{waiter.name}</td>
+                <td className="px-4 py-2 text-left">{waiter.username}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
       </div>
     </div>
   );

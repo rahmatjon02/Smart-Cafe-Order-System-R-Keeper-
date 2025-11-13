@@ -145,26 +145,7 @@ function WaiterEdit() {
   const handleMenuItemClick = async (item) => {
     if (!orderData?.data?.id) return;
     await addOrderItem({ orderId: Number(orderId), menuItemId: item.id });
-    setOrderItems((prev) => {
-      const exist = prev.find((i) => i.menuItemId === item.id);
-      if (exist) {
-        return prev.map((i) =>
-          i.menuItemId === item.id
-            ? { ...i, quantity: i.quantity + 1, priceAtOrderTime: item.price }
-            : i
-        );
-      }
-      return [
-        ...prev,
-        {
-          id: Date.now(),
-          orderId: Number(orderId),
-          menuItemId: item.id,
-          quantity: 1,
-          priceAtOrderTime: item.price,
-        },
-      ];
-    });
+    refetch();
   };
 
   const handleRemoveItem = async (item) => {
@@ -177,24 +158,13 @@ function WaiterEdit() {
   };
 
   const handleCancelOrder = async () => {
-    // const hasStartedItems = orderItems.some(
-    //   (item) =>
-    //     item.status === "Started" ||
-    //     item.status === "Ready" ||
-    //     item.status === "Served"
-    // );
-
-    // if (hasStartedItems) {
-    //   toast.error("Нельзя отменять заказ — блюда уже готовятся!");
-    //   return;
-    // }
-
     try {
       await cancelOrder(Number(orderId)).unwrap();
       toast.success("Заказ отменён");
       navigate("/WaiterHome");
     } catch {
-      toast.error("Ошибка при отмене заказа");
+      toast.error("Нельзя отменять заказ!");
+      // toast.error("Ошибка при отмене заказа");
     }
   };
 

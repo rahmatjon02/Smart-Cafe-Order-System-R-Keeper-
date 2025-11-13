@@ -33,6 +33,11 @@ export const waiterApi = createApi({
       query: () => `/WaiterService/get-avg-order-time`,
       providesTags: ["WaiterStats"],
     }),
+    getAllWaiters: builder.query({
+      query: ({ pageNumber = 1, pageSize = 10 }) =>
+        `/Auth/get-all-waiters?pageNumber=${pageNumber}&pageSize=${pageSize}`,
+      providesTags: ["WaiterStats"],
+    }),
   }),
 });
 
@@ -41,4 +46,5 @@ export const {
   useGetOrdersCountQuery,
   useGetOrdersTotalQuery,
   useGetAvgOrderTimeQuery,
+  useGetAllWaitersQuery,
 } = waiterApi;

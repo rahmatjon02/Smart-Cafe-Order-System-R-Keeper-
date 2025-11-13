@@ -7,6 +7,7 @@ import { toast, Toaster } from "react-hot-toast";
 import { Check, LogOut } from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
 import { useGetRoleFromTokenMutation } from "../../store/authApi";
+import useAuth from "../../hooks/useAuth";
 
 const Kitchen = () => {
   const navigate = useNavigate();
@@ -39,18 +40,22 @@ const Kitchen = () => {
   }, []);
 
   const [isAdmin, setIsAdmin] = useState(false);
-  const [getRoleFromToken] = useGetRoleFromTokenMutation();
 
   const roleCheck = async () => {
     const token = localStorage.getItem("token");
     if (token) {
-      const response = await getRoleFromToken(token);
+      // теперь просто используем твой готовый хук useAuth
+      const { role } = useAuth();
 
-      if (response?.data?.data === "Admin") {
+      if (role === "Admin") {
         setIsAdmin(true);
       }
     }
   };
+
+  useEffect(() => {
+    roleCheck();
+  }, []);
 
   const handleReady = async (id) => {
     try {
