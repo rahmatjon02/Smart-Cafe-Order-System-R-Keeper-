@@ -34,8 +34,13 @@ export const reportApi = createApi({
       providesTags: ["Report"],
     }),
     getPopularMenuItems: builder.query({
-      query: ({ pageNumber = 1, pageSize = 10 }) =>
+      query: ({ pageNumber = 1, pageSize = 100 }) =>
         `/Report/get-popular-menu-items?pageNumber=${pageNumber}&pageSize=${pageSize}`,
+      providesTags: ["Report"],
+    }),
+    getWaitersRating: builder.query({
+      query: ({ pageNumber = 1, pageSize = 100 }) =>
+        `/Report/get-waiters-rating?pageNumber=${pageNumber}&pageSize=${pageSize}`,
       providesTags: ["Report"],
     }),
   }),
@@ -47,4 +52,5 @@ export const {
   useGetAvgCheckTotalQuery,
   useGetAvgOrderDurationQuery,
   useGetPopularMenuItemsQuery,
+  useGetWaitersRatingQuery,
 } = reportApi;

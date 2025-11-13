@@ -5,6 +5,7 @@ import {
   useGetAvgCheckTotalQuery,
   useGetAvgOrderDurationQuery,
   useGetPopularMenuItemsQuery,
+  useGetWaitersRatingQuery,
 } from "../../store/reportApi";
 import { useGetAllOrdersQuery } from "../../store/orderApi";
 
@@ -51,14 +52,19 @@ export function AdminDashboard() {
     return () => clearInterval(timer);
   }, []);
 
+  const { data: waitersRatingData, isLoading: waitersRatingLoading } =
+    useGetWaitersRatingQuery({
+      pageNumber: 1,
+      pageSize: 5,
+    });
+
   // Заглушки для рейтинга официантов
-  const waiters = ["Алексей", "Марина", "Иван", "Светлана"];
 
   // Сортируем и берём последние 10 заказов
   const latestOrders = allOrdersData?.data
     ? [...allOrdersData.data]
         .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt))
-        .slice(0, 6)
+        .slice(0, 4)
     : [];
 
   return (
@@ -77,9 +83,7 @@ export function AdminDashboard() {
         {/* Верхние карточки */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-4">
           <div className="rounded-2xl p-4 bg-[#141414]">
-            <div className="text-sm text-gray-400">Выручка
-              
-            </div>
+            <div className="text-sm text-gray-400">Выручка</div>
             <div className="flex items-center justify-between mt-2">
               <div className="text-2xl font-bold">
                 {revenueLoading ? "..." : `${revenueData?.data ?? 0} TJS`}
@@ -99,9 +103,7 @@ export function AdminDashboard() {
           </div>
 
           <div className="rounded-2xl p-4 bg-[#141414]">
-            <div className="text-sm text-gray-400">Заказы
-              
-            </div>
+            <div className="text-sm text-gray-400">Заказы</div>
             <div className="flex items-center justify-between mt-2">
               <div className="text-2xl font-bold">
                 {ordersLoading ? "..." : ordersData?.data ?? 0}
@@ -110,9 +112,7 @@ export function AdminDashboard() {
           </div>
 
           <div className="rounded-2xl p-4 bg-[#141414]">
-            <div className="text-sm text-gray-400">Среднее время
-              
-            </div>
+            <div className="text-sm text-gray-400">Среднее время</div>
             <div className="flex items-center justify-between mt-2">
               <div className="text-2xl font-bold">
                 {avgTimeLoading
@@ -129,15 +129,16 @@ export function AdminDashboard() {
           <div className="bg-[#141414] rounded-2xl p-4">
             <div className="text-sm text-gray-400">Рейтинг официантов</div>
             <div className="mt-3 space-y-2">
-              {waiters.map((n, i) => (
+              {waitersRatingData?.data.map((n, i) => (
                 <div key={n} className="flex items-center justify-between">
                   <div className="flex items-center gap-3">
                     <div className="w-9 h-9 bg-[#2a2a2a] rounded-full flex items-center justify-center">
-                      {n[0]}
+                      {n.employeeName[0]}
                     </div>
-                    <div className="text-sm">{n}</div>
+                    {/* <div className="text-sm">{n.employeeId}</div> */}
+                    <div className="text-sm">{n.employeeName}</div>
                   </div>
-                  <div className="text-sm font-semibold">{90 - i * 5}%</div>
+                  <div className="text-base  font-bold">{n.totalRevenue} TJS</div>
                 </div>
               ))}
             </div>
@@ -158,7 +159,7 @@ export function AdminDashboard() {
                 </thead>
                 <tbody>
                   {popularData.data.map((item) => (
-                    <tr key={item.menuItemId} className="hover:bg-white/10">
+                    <tr key={item.menuItemId}>
                       <td className="p-2">{item.menuItemName}</td>
                       <td className="p-2">{item.ordersCount}</td>
                     </tr>
