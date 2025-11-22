@@ -1,11 +1,12 @@
-import { useState } from "react";
+import { memo, useState } from "react";
 import {
   useGetAllOrdersQuery,
   useLazyGetSingleOrderByIdQuery,
 } from "../../store/orderApi";
 import { Eye, X } from "lucide-react";
+import { CircularProgress } from "@mui/material";
 
-export function OrdersAdmin() {
+ function OrdersAdmin() {
   const [searchId, setSearchId] = useState("");
   const [searchWaiter, setSearchWaiter] = useState("");
   const [searchStatus, setSearchStatus] = useState("");
@@ -94,7 +95,7 @@ export function OrdersAdmin() {
             </select>
             <button
               onClick={() => refetch()}
-              className="px-4 py-2 bg-[#8b6af0] text-black rounded-lg w-full sm:w-auto"
+              className="px-4 py-2 bg-[#8b6af0]  rounded-lg w-full sm:w-auto"
             >
               Обновить
             </button>
@@ -103,7 +104,9 @@ export function OrdersAdmin() {
 
         {/* Таблица заказов */}
         {isLoading ? (
-          <div className="text-white text-center py-10">Загрузка...</div>
+          <div className="flex justify-center items-center h-40 text-white py-20">
+            <CircularProgress color="inherit" />
+          </div>
         ) : filteredOrders.length === 0 ? (
           <div className="text-gray-400 text-center py-10">
             Нет заказов для отображения
@@ -217,3 +220,5 @@ export function OrdersAdmin() {
     </div>
   );
 }
+
+export default memo(OrdersAdmin);

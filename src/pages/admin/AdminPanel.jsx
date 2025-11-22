@@ -1,6 +1,6 @@
 import React from "react";
-import { AdminDashboard } from "./AdminDashboard";
-import { OrdersAdmin } from "./OrdersAdmin";
+import AdminDashboard from "./AdminDashboard";
+import  OrdersAdmin  from "./OrdersAdmin";
 import { Link } from "react-router-dom";
 import TablesAdmin from "./TablesAdmin";
 import CategoriesAdmin from "./CategoriesAdmin";
@@ -51,7 +51,7 @@ export default function AdminPanel() {
                   onClick={() => setTab(btn.key)}
                   className={`px-4 py-2 rounded-md text-sm sm:text-base whitespace-nowrap snap-start transition ${
                     tab === btn.key
-                      ? "bg-[#8b6af0] text-black"
+                      ? "bg-[#8b6af0] "
                       : "bg-[#1f1f1f] hover:bg-[#2a2a2a]"
                   }`}
                 >

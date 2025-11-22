@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { memo, useEffect, useState } from "react";
 import {
   useGetNumberOfOrdersQuery,
   useGetTodayTotalRevenueQuery,
@@ -9,7 +9,7 @@ import {
 } from "../../store/reportApi";
 import { useGetAllOrdersQuery } from "../../store/orderApi";
 
-export function AdminDashboard() {
+ function AdminDashboard() {
   const [currentTime, setCurrentTime] = useState("");
 
   // RTK Query
@@ -66,6 +66,8 @@ export function AdminDashboard() {
         .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt))
         .slice(0, 4)
     : [];
+
+    
 
   return (
     <div className="bg-[#0b0b0b] text-white p-4 sm:p-6">
@@ -138,7 +140,9 @@ export function AdminDashboard() {
                     {/* <div className="text-sm">{n.employeeId}</div> */}
                     <div className="text-sm">{n.employeeName}</div>
                   </div>
-                  <div className="text-base  font-bold">{n.totalRevenue} TJS</div>
+                  <div className="text-base  font-bold">
+                    {n.totalRevenue} TJS
+                  </div>
                 </div>
               ))}
             </div>
@@ -209,3 +213,5 @@ export function AdminDashboard() {
     </div>
   );
 }
+
+export default memo(AdminDashboard);

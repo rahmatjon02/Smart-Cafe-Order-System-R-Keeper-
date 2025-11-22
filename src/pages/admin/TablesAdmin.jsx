@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useMemo, useState } from "react";
 import {
   useGetAllTablesQuery,
   useCreateTableMutation,
@@ -8,7 +8,7 @@ import {
 import { CircularProgress } from "@mui/material";
 import { CheckCircle, XCircle } from "lucide-react";
 
-export default function TablesAdmin() {
+function TablesAdmin() {
   const { data, isLoading, refetch } = useGetAllTablesQuery({
     pageNumber: 1,
     pageSize: 1000,
@@ -48,14 +48,14 @@ export default function TablesAdmin() {
     }
   };
 
+  const tables = useMemo(() => data?.data || [], [data]);
+
   if (isLoading)
     return (
       <div className="flex justify-center items-center h-40 text-white">
         <CircularProgress color="inherit" />
       </div>
     );
-
-  const tables = data?.data || [];
 
   return (
     <div className="p-4 sm:p-6 text-white">
@@ -143,3 +143,5 @@ export default function TablesAdmin() {
     </div>
   );
 }
+
+export default React.memo(TablesAdmin);

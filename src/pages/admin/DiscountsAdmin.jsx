@@ -5,8 +5,9 @@ import {
   useGetDiscountsQuery,
 } from "../../store/discountApi";
 import toast, { Toaster } from "react-hot-toast";
+import { CircularProgress } from "@mui/material";
 
-export default function DiscountsAdmin() {
+function DiscountsAdmin() {
   const { data, isLoading, refetch } = useGetDiscountsQuery();
   const [createDiscount] = useCreateDiscountMutation();
   const [endDiscount] = useEndDiscountMutation();
@@ -67,7 +68,12 @@ export default function DiscountsAdmin() {
     ));
   };
 
-  if (isLoading) return <div className="text-center py-10">Загрузка...</div>;
+  if (isLoading)
+    return (
+      <div className="flex justify-center items-center h-40 text-white py-20">
+        <CircularProgress color="inherit" />
+      </div>
+    );
 
   const discounts = data?.data || [];
 
@@ -171,3 +177,4 @@ export default function DiscountsAdmin() {
     </div>
   );
 }
+export default React.memo(DiscountsAdmin);

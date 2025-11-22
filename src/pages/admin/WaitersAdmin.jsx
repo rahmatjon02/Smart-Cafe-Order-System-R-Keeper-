@@ -4,13 +4,16 @@ import { useRegisterMutation } from "../../store/authApi";
 import toast, { Toaster } from "react-hot-toast";
 import { Link } from "react-router-dom";
 import { useGetAllWaitersQuery } from "../../store/waiterApi";
+import { CircularProgress } from "@mui/material";
 
-export default function WaitersAdmin() {
+function WaitersAdmin() {
   const [register] = useRegisterMutation();
   const [form, setForm] = useState({ username: "", password: "", name: "" });
   const [loading, setLoading] = useState(false);
-  const { data: waitersData, isLoading: waitersLoading } =
-    useGetAllWaitersQuery({ pageNumber: 1, pageSize: 200 });
+  const { data: waitersData, isLoading } = useGetAllWaitersQuery({
+    pageNumber: 1,
+    pageSize: 200,
+  });
 
   const handleAdd = async () => {
     if (!form.username || !form.password || !form.name) {
@@ -29,6 +32,13 @@ export default function WaitersAdmin() {
       setLoading(false);
     }
   };
+
+  if (isLoading)
+    return (
+      <div className="flex justify-center items-center h-40 text-white py-20">
+        <CircularProgress color="inherit" />
+      </div>
+    );
 
   return (
     <div className="min-h-screen bg-[#0b0b0b] text-white p-6">
@@ -97,3 +107,4 @@ export default function WaitersAdmin() {
     </div>
   );
 }
+export default React.memo(WaitersAdmin);

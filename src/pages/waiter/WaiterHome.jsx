@@ -16,8 +16,8 @@ import {
   useGetAvgOrderTimeQuery,
   useGetProfileQuery,
 } from "../../store/waiterApi";
-import { useGetRoleFromTokenMutation } from "../../store/authApi";
 import useAuth from "../../hooks/useAuth";
+import { CircularProgress } from "@mui/material";
 
 export default function WaiterHome() {
   const { data, isLoading, isError, refetch } = useGetAllTablesQuery({
@@ -110,7 +110,6 @@ export default function WaiterHome() {
   ]);
 
   const [isAdmin, setIsAdmin] = useState(false);
-  const [getRoleFromToken] = useGetRoleFromTokenMutation();
 
   const roleCheck = async () => {
     const token = localStorage.getItem("token");
@@ -244,6 +243,17 @@ export default function WaiterHome() {
       </div>
 
       {/* Tables grid */}
+      {isLoading && (
+        <div className="flex justify-center items-center h-40 text-white py-20">
+          <CircularProgress color="inherit" />
+        </div>
+      )}
+
+      {isError && (
+        <div className="text-red-500 text-center py-10 bg-red-50 rounded-lg">
+          Ошибка загрузки столов. Проверьте подключение к интернету.
+        </div>
+      )}
       <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-3 py-4">
         {tables.map((table) => (
           <div

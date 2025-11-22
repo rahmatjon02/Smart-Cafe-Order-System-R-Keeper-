@@ -18,6 +18,7 @@ import {
   Box,
   Button,
   TextField,
+  CircularProgress,
 } from "@mui/material";
 import {
   ArrowBack,
@@ -53,7 +54,6 @@ import { useGetProfileQuery } from "../../store/waiterApi";
 function WaiterEdit() {
   const { tableId } = useParams();
   const navigate = useNavigate();
-  const { data: profile, refetch: refetchProfile } = useGetProfileQuery();
 
   // Форматирование времени заказа / позиции
   const formatTime = (t) => {
@@ -107,7 +107,6 @@ function WaiterEdit() {
 
   useEffect(() => {
     refetch();
-    refetchProfile();
   }, []);
 
   // --- Меню и категории ---
@@ -203,7 +202,12 @@ function WaiterEdit() {
     else setDrawerOpen(false);
   };
 
-  if (isLoading) return <div className="p-4 text-white">Загрузка...</div>;
+  if (isLoading)
+    return (
+      <div className="flex justify-center items-center h-40 text-white py-20">
+        <CircularProgress color="inherit" />
+      </div>
+    );
 
   return (
     <div className="bg-black text-white h-screen flex flex-col overflow-hidden">

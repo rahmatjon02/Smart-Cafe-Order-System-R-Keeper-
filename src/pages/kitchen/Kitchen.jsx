@@ -8,6 +8,7 @@ import { Check, LogOut } from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
 import { useGetRoleFromTokenMutation } from "../../store/authApi";
 import useAuth from "../../hooks/useAuth";
+import { CircularProgress } from "@mui/material";
 
 const Kitchen = () => {
   const navigate = useNavigate();
@@ -147,7 +148,7 @@ const Kitchen = () => {
                   colSpan="7"
                   className="text-center py-10 text-white/60 text-base"
                 >
-                  Загрузка...
+                  <CircularProgress color="inherit" />
                 </td>
               </tr>
             ) : queue.length === 0 ? (

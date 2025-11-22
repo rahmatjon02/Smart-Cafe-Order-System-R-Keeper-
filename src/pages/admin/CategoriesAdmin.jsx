@@ -24,7 +24,7 @@ import {
 } from "../../store/orderApi.js";
 import { CircularProgress, Collapse, Modal } from "@mui/material";
 
-export default function CategoriesAdmin() {
+ function CategoriesAdmin() {
   const { data, isLoading, refetch } = useGetCategoriesQuery({
     onlyActive: false,
     pageNumber: 1,
@@ -125,7 +125,7 @@ export default function CategoriesAdmin() {
 
   if (isLoading)
     return (
-      <div className="flex justify-center items-center h-40 text-white">
+      <div className="flex justify-center items-center h-40 text-white py-20">
         <CircularProgress color="inherit" />
       </div>
     );
@@ -338,6 +338,8 @@ export default function CategoriesAdmin() {
     </div>
   );
 }
+
+export default React.memo(CategoriesAdmin);
 
 /* === TABLE: MENU ITEMS === */
 function CategoryMenuItems({ categoryId }) {
