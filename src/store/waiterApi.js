@@ -38,6 +38,47 @@ export const waiterApi = createApi({
         `/Auth/get-all-waiters?pageNumber=${pageNumber}&pageSize=${pageSize}`,
       providesTags: ["WaiterStats"],
     }),
+
+    updateWaiter: builder.mutation({
+      query: ({ id, name, username }) => ({
+        url: "/Auth/update-waiter",
+        method: "PUT",
+        body: { id, name, username },
+      }),
+      invalidatesTags: ["WaiterStats"],
+    }),
+
+    changePassword: builder.mutation({
+      query: ({ id, newPassword }) => ({
+        url: "/Auth/change-password",
+        method: "PUT",
+        body: { id, newPassword },
+      }),
+    }),
+
+    deactivateWaiter: builder.mutation({
+      query: (userId) => ({
+        url: `/Auth/deactivate-waiter?userId=${userId}`,
+        method: "DELETE",
+      }),
+      invalidatesTags: ["WaiterStats"],
+    }),
+
+    activateWaiter: builder.mutation({
+      query: (userId) => ({
+        url: `/Auth/activate-waiter?userId=${userId}`,
+        method: "PUT",
+      }),
+      invalidatesTags: ["WaiterStats"],
+    }),
+
+    deleteWaiter: builder.mutation({
+      query: (userId) => ({
+        url: `/Auth/delete-waiter?userId=${userId}`,
+        method: "DELETE",
+      }),
+      invalidatesTags: ["WaiterStats"],
+    }),
   }),
 });
 
@@ -47,4 +88,9 @@ export const {
   useGetOrdersTotalQuery,
   useGetAvgOrderTimeQuery,
   useGetAllWaitersQuery,
+  useUpdateWaiterMutation,
+  useChangePasswordMutation,
+  useDeactivateWaiterMutation,
+  useActivateWaiterMutation,
+  useDeleteWaiterMutation,
 } = waiterApi;

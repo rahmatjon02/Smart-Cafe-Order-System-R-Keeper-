@@ -79,9 +79,10 @@ function WaiterEdit() {
     data: orderData,
     isLoading,
     refetch,
-  } = useGetSingleOrderQuery({
-    tableId: Number(tableId),
-  });
+  } = useGetSingleOrderQuery(
+    { tableId: Number(tableId) },
+    { refetchOnMountOrArgChange: true, pollingInterval: 5000 }
+  );
   const orderId = orderData?.data?.id;
 
   const orderCreatedAt = orderData?.data?.createdAt || "-";
@@ -104,10 +105,6 @@ function WaiterEdit() {
       { name: searchTerm, pageNumber: 1, pageSize: 1000 },
       { skip: !searchTerm }
     );
-
-  useEffect(() => {
-    refetch();
-  }, []);
 
   // --- Меню и категории ---
   const { data: menuData } = useGetMenuItemsQuery({
@@ -154,6 +151,7 @@ function WaiterEdit() {
 
   const handleServedItem = async (item) => {
     await serveOrderItem({ orderItemId: item.id });
+    refetch();
   };
 
   const handleCancelOrder = async () => {

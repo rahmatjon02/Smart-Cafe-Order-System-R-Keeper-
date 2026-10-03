@@ -4,7 +4,14 @@ const baseUrl = "/api";
 
 export const orderApi = createApi({
   reducerPath: "orderApi",
-  baseQuery: fetchBaseQuery({ baseUrl }),
+  baseQuery: fetchBaseQuery({
+    baseUrl,
+    prepareHeaders: (headers) => {
+      const token = localStorage.getItem("token");
+      if (token) headers.set("Authorization", `Bearer ${token}`);
+      return headers;
+    },
+  }),
   tagTypes: ["Orders", "OrderItems", "Tables", "Menu", "Categories"],
   endpoints: (builder) => ({
     // -------------------- Categories --------------------

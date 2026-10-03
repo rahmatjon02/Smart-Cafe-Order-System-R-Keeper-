@@ -1,4 +1,5 @@
 import React, { useState } from "react";
+import toast, { Toaster } from "react-hot-toast";
 import {
   Edit,
   Save,
@@ -107,19 +108,24 @@ import { CircularProgress, Collapse, Modal } from "@mui/material";
   };
 
   const handleAddItem = async () => {
-    if (!newItem.name.trim() || !newItem.price) return;
+    if (!newItem.name.trim() || !newItem.price) {
+      toast.error("Укажите название и цену блюда");
+      return;
+    }
     try {
       await createMenuItem({
         name: newItem.name,
         description: newItem.description,
         price: parseFloat(newItem.price),
-        prepTime: `${newItem.prepTime}`,
+        prepTime: newItem.prepTime || "00:15",
         categoryId: selectedCategoryId,
       }).unwrap();
+      toast.success("Блюдо добавлено");
       setModalOpen(false);
       refetch();
     } catch (err) {
-      console.error("Ошибка при добавлении блюда:", err);
+      const msg = err?.data?.message;
+      toast.error(Array.isArray(msg) ? msg[0] : typeof msg === "string" ? msg : "Ошибка при добавлении блюда");
     }
   };
 
@@ -134,6 +140,7 @@ import { CircularProgress, Collapse, Modal } from "@mui/material";
 
   return (
     <div className="p-4 sm:p-6 text-white">
+      <Toaster />
       {/* HEADER */}
       <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-3 mb-6">
         <h2 className="text-xl sm:text-2xl font-bold text-center sm:text-left">
